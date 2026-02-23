@@ -124,21 +124,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.t1,
     letterSpacing: -0.3,
+    fontVariant: ['tabular-nums'],
   },
   projected: {
     fontSize: 10.5,
     color: colors.t3,
     marginTop: 1,
+    fontVariant: ['tabular-nums'],
   },
   badge: {
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 7,
+    borderCurve: 'continuous',
     minWidth: 50,
     alignItems: 'center',
   },
   badgeText: {
     fontSize: 11,
     fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
 });

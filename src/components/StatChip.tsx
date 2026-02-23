@@ -27,6 +27,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: 8,
+    borderCurve: 'continuous',
     paddingTop: 9,
     paddingBottom: 8,
     paddingHorizontal: 6,
@@ -37,6 +38,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.4,
     color: c.t1,
+    fontVariant: ['tabular-nums'],
   },
   label: {
     fontSize: 9.5,

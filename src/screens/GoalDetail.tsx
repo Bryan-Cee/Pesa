@@ -32,7 +32,7 @@ export function GoalDetail() {
   const allGoals = useGoalStore((s) => s.goals);
   const allContributions = useGoalStore((s) => s.contributions);
   const updateGoal = useGoalStore((s) => s.updateGoal);
-  const archiveGoal = useGoalStore((s) => s.archiveGoal);
+  const deleteGoal = useGoalStore((s) => s.deleteGoal);
   const addContribution = useGoalStore((s) => s.addContribution);
 
   const colors = useColors();
@@ -100,16 +100,17 @@ export function GoalDetail() {
     setContribNote('');
   }
 
-  function handleArchive() {
+  function handleDelete() {
     Alert.alert(
-      'Archive Goal',
-      'Archive this goal? Your contribution history will be saved.',
+      'Delete Goal',
+      'Permanently delete this goal and all its data? This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Archive',
+          text: 'Delete',
+          style: 'destructive',
           onPress: () => {
-            archiveGoal(goal!.id);
+            deleteGoal(goal!.id);
             router.back();
           },
         },
@@ -302,9 +303,9 @@ export function GoalDetail() {
           </Pressable>
         )}
 
-        {/* Archive */}
-        <Pressable style={s.archiveBtn} onPress={handleArchive}>
-          <Text style={s.archiveBtnText}>Archive Goal</Text>
+        {/* Delete */}
+        <Pressable style={s.deleteBtn} onPress={handleDelete}>
+          <Text style={s.deleteBtnText}>Delete Goal</Text>
         </Pressable>
 
         <View style={{ height: 40 }} />
@@ -456,15 +457,16 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   addContribText: { color: c.t1, fontSize: 15, fontWeight: '700' },
-  archiveBtn: {
+  deleteBtn: {
     marginHorizontal: spacing.md,
     marginTop: spacing.lg,
     paddingVertical: 14,
     borderRadius: radii.button,
-    backgroundColor: c.bgCard,
+    borderCurve: 'continuous',
+    backgroundColor: c.redDim,
     borderWidth: 1,
-    borderColor: c.border,
+    borderColor: c.red + '30',
     alignItems: 'center',
   },
-  archiveBtnText: { color: c.red, fontSize: 15, fontWeight: '700' },
+  deleteBtnText: { color: c.red, fontSize: 15, fontWeight: '700' },
 });

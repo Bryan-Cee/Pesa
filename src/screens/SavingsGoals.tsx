@@ -8,8 +8,10 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { useColors } from '../hooks/useTheme';
+import { useColors, useIsDark } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useGoalStore, GoalType, GoalRecurrence } from '../stores/goalStore';
@@ -30,6 +32,7 @@ export function SavingsGoals() {
   const addGoal = useGoalStore((s) => s.addGoal);
 
   const colors = useColors();
+  const isDark = useIsDark();
   const s = mkStyles(colors);
 
   const activeGoals = useMemo(
@@ -42,7 +45,8 @@ export function SavingsGoals() {
   const [newEmoji, setNewEmoji] = useState('\uD83C\uDFAF');
   const [newType, setNewType] = useState<GoalType>('CUSTOM');
   const [newTarget, setNewTarget] = useState('');
-  const [newTargetDate, setNewTargetDate] = useState('');
+  const [newTargetDate, setNewTargetDate] = useState<Date | null>(null);
+  const [showTargetDatePicker, setShowTargetDatePicker] = useState(false);
   const [newRecurrence, setNewRecurrence] = useState<GoalRecurrence>('ONE_OFF');
 
   const totalMonthly = activeGoals.reduce((sum, g) => {
@@ -56,14 +60,15 @@ export function SavingsGoals() {
 
   function handleCreateGoal() {
     const target = parseInt(newTarget, 10) || 0;
-    const mr = calculateMonthlyRequired(target, 0, newTargetDate || undefined);
+    const targetDateStr = newTargetDate ? newTargetDate.toISOString().split('T')[0] : undefined;
+    const mr = calculateMonthlyRequired(target, 0, targetDateStr);
     addGoal({
       name: newName || 'New Goal',
       emoji: newEmoji,
       type: newType,
       targetAmount: target,
       currentBalance: 0,
-      targetDate: newTargetDate || undefined,
+      targetDate: targetDateStr,
       recurrence: newRecurrence,
       monthlyRequired: mr,
       isArchived: false,
@@ -71,7 +76,7 @@ export function SavingsGoals() {
     setShowCreate(false);
     setNewName('');
     setNewTarget('');
-    setNewTargetDate('');
+    setNewTargetDate(null);
   }
 
   const goalTypes: { label: string; value: GoalType }[] = [
@@ -306,8 +311,24 @@ export function SavingsGoals() {
       {/* Create Goal Modal */}
       <Modal visible={showCreate} animationType="slide" transparent>
         <View style={s.modalOverlay}>
+          {/* Blur backdrop — tap to dismiss */}
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowCreate(false)}>
+            <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+          </Pressable>
+
           <View style={s.modalContent}>
-            <Text style={s.modalTitle}>New Savings Goal</Text>
+            {/* Drag handle */}
+            <View style={s.handleRow}>
+              <View style={s.handle} />
+            </View>
+
+            {/* Header */}
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>New Savings Goal</Text>
+              <Pressable style={s.modalCloseBtn} onPress={() => setShowCreate(false)}>
+                <Text style={s.modalCloseBtnText}>Done</Text>
+              </Pressable>
+            </View>
 
             <View style={s.modalField}>
               <Text style={s.modalLabel}>Name</Text>
@@ -400,16 +421,31 @@ export function SavingsGoals() {
             </View>
 
             <View style={s.modalField}>
-              <Text style={s.modalLabel}>
-                Target Date (YYYY-MM-DD, optional)
-              </Text>
-              <TextInput
-                style={s.modalInput}
-                value={newTargetDate}
-                onChangeText={setNewTargetDate}
-                placeholder="2027-01-01"
-                placeholderTextColor={colors.t3}
-              />
+              <Text style={s.modalLabel}>Target Date (optional)</Text>
+              <Pressable
+                style={s.datePickerBtn}
+                onPress={() => setShowTargetDatePicker(true)}
+              >
+                <Text style={newTargetDate ? s.datePickerValue : s.datePickerPlaceholder}>
+                  {newTargetDate
+                    ? newTargetDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Select date'}
+                </Text>
+              </Pressable>
+              {showTargetDatePicker && (
+                <DateTimePicker
+                  value={newTargetDate ?? new Date()}
+                  mode="date"
+                  display="inline"
+                  minimumDate={new Date()}
+                  themeVariant={isDark ? 'dark' : 'light'}
+                  accentColor={colors.coral}
+                  onChange={(_, date) => {
+                    setShowTargetDatePicker(false);
+                    if (date) setNewTargetDate(date);
+                  }}
+                />
+              )}
             </View>
 
             <View style={s.modalActions}>
@@ -618,24 +654,55 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   /* Modal */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: c.bgSheet,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderBottomWidth: 0,
     borderColor: c.borderMed,
-    padding: spacing.lg,
-    maxHeight: '85%',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    maxHeight: '88%',
+  },
+  handleRow: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 2,
+  },
+  handle: {
+    width: 36,
+    height: 5,
+    borderRadius: 100,
+    backgroundColor: c.t3,
+    opacity: 0.4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: spacing.sm,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: c.t1,
-    marginBottom: 20,
+  },
+  modalCloseBtn: {
+    backgroundColor: c.coralDim,
+    borderRadius: radii.button,
+    borderCurve: 'continuous',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  modalCloseBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: c.coral,
   },
   modalField: { marginBottom: 16 },
   modalLabel: {
@@ -662,6 +729,21 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   typePillActive: { backgroundColor: c.coralDim },
   typePillText: { fontSize: 13, fontWeight: '600', color: c.t2 },
   typePillTextActive: { color: c.coral },
+  datePickerBtn: {
+    backgroundColor: c.bgCard,
+    borderBottomWidth: 1,
+    borderBottomColor: c.border,
+    paddingVertical: 10,
+  },
+  datePickerValue: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: c.t1,
+  },
+  datePickerPlaceholder: {
+    fontSize: 16,
+    color: c.t3,
+  },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',

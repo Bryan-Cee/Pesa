@@ -43,6 +43,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: c.bgCard,
     borderRadius: radii.lg,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: c.border,
     padding: spacing.md,

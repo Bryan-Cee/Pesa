@@ -20,6 +20,7 @@ import { MonthSelector } from '../components/MonthSelector';
 import { ProgressBar } from '../components/ProgressBar';
 import { formatKes } from '../utils/formatters';
 import { TabIcon } from '../components/TabIcon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CATEGORY_GROUP_ORDER,
   CATEGORY_GROUP_META,
@@ -30,6 +31,7 @@ export function Budget() {
   const router = useRouter();
   const colors = useColors();
   const s = mkStyles(colors);
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ monthId?: string }>();
 
   const months = useBudgetStore((s) => s.months);
@@ -66,7 +68,7 @@ export function Budget() {
   const selectedMonth = sortedMonths[monthIndex];
   if (!selectedMonth) {
     return (
-      <View style={s.screen}>
+      <View style={[s.screen, { paddingTop: insets.top }]}>
         <Text style={s.empty}>No budget months found.</Text>
       </View>
     );
@@ -150,7 +152,7 @@ export function Budget() {
   return (
     <View style={s.screen}>
       {/* Eyebrow */}
-      <View style={s.eyebrowRow}>
+      <View style={[s.eyebrowRow, { paddingTop: insets.top + 10 }]}>
         <Text style={s.eyebrowText}>BUDGET {'\u00B7'} MONTH VIEW</Text>
       </View>
 
@@ -239,7 +241,7 @@ export function Budget() {
         <ProgressBar progress={progress} height={4} />
       </View>
 
-      <ScrollView style={s.list} showsVerticalScrollIndicator={false}>
+      <ScrollView style={s.list} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">
         {CATEGORY_GROUP_ORDER.map((group) => {
           const cats = grouped[group];
           if (!cats) return null;
@@ -447,7 +449,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
 
   /* Eyebrow */
   eyebrowRow: {
-    paddingTop: 54,
     paddingHorizontal: spacing.md,
     paddingBottom: 4,
     alignItems: 'center',
@@ -475,6 +476,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: 10,
+    borderCurve: 'continuous',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -505,6 +507,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.borderFocus,
     borderRadius: 10,
+    borderCurve: 'continuous',
   },
 
   /* Income subtitle */
@@ -525,6 +528,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.borderMed,
     borderRadius: radii.md,
+    borderCurve: 'continuous',
     paddingVertical: 14,
     paddingHorizontal: spacing.md,
   },
@@ -550,17 +554,20 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.t1,
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
   summaryValueBudget: {
     fontSize: 14,
     fontWeight: '600',
     color: c.t2,
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
   summaryValueRemaining: {
     fontSize: 14,
     fontWeight: '600',
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
   progressBarWrap: {
     paddingHorizontal: spacing.md,
@@ -578,6 +585,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     marginHorizontal: spacing.md,
     marginTop: spacing.sm,
     borderRadius: radii.sm,
+    borderCurve: 'continuous',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: c.border,
@@ -594,12 +602,12 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   sectionDot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    marginRight: 8,
   },
   sectionLabel: {
     fontSize: 11,
@@ -664,17 +672,20 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.t1,
     letterSpacing: -0.3,
+    fontVariant: ['tabular-nums'],
   },
   catBadge: {
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 7,
+    borderCurve: 'continuous',
     minWidth: 50,
     alignItems: 'center',
   },
   catBadgeText: {
     fontSize: 11,
     fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
 
   /* Mini progress bar */
@@ -698,7 +709,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   /* Footer */
   footer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(9,9,14,0.95)',
+    backgroundColor: c.bgCard,
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
     paddingBottom: 30,
@@ -725,5 +736,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.t1,
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
 });

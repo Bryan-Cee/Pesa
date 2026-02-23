@@ -3,16 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   SectionList,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useReminderStore, Reminder } from '../stores/reminderStore';
-import { formatDateRelative } from '../utils/formatters';
+import { formatDateRelative, formatKes } from '../utils/formatters';
 import { TabIcon } from '../components/TabIcon';
 import { differenceInDays } from 'date-fns';
 
@@ -27,9 +27,15 @@ function getTypeColors(colors: ThemeColors): Record<string, string> {
   };
 }
 
-function ReminderItem({ reminder }: { reminder: Reminder }) {
+function ReminderItem({
+  reminder,
+}: {
+  reminder: Reminder;
+}) {
+  const router = useRouter();
   const colors = useColors();
   const s = mkStyles(colors);
+  const deleteReminder = useReminderStore((st) => st.deleteReminder);
   const TYPE_COLORS = getTypeColors(colors);
   const dotColor = TYPE_COLORS[reminder.linkedType] ?? colors.t3;
   const daysUntil = differenceInDays(new Date(reminder.nextFireDate), new Date());
@@ -57,33 +63,53 @@ function ReminderItem({ reminder }: { reminder: Reminder }) {
 
   const isUrgent = daysUntil <= 2 && daysUntil >= 0 && reminder.status !== 'SNOOZED';
 
+  const typeLabel = reminder.type === 'RECURRING'
+    ? `Recurring \u00B7 ${(reminder.recurrencePattern ?? '').replace(/_/g, ' ').toLowerCase()}`
+    : 'One-time';
+
+  function handleDelete() {
+    Alert.alert('Delete Reminder', 'Remove this reminder permanently?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteReminder(reminder.id) },
+    ]);
+  }
+
+  function handlePress() {
+    if (reminder.categoryId) {
+      router.push({ pathname: '/category-detail', params: { categoryId: reminder.categoryId } });
+    }
+  }
+
   return (
-    <View style={s.reminderRow}>
-      <View style={[s.reminderDot, { backgroundColor: dotColor }]} />
-      <View style={s.reminderInfo}>
-        <Text style={s.reminderName} numberOfLines={1}>
+    <Pressable style={s.txRow} onPress={handlePress} onLongPress={handleDelete}>
+      <View style={[s.txDot, { backgroundColor: dotColor }]} />
+      <View style={s.txCenter}>
+        <Text style={s.txDescription} numberOfLines={1}>
           {reminder.name}
         </Text>
-        <Text style={s.reminderSub} numberOfLines={1}>
+        <Text style={s.txCategory} numberOfLines={1}>
           {reminder.linkedType !== 'STANDALONE' ? `${reminder.linkedType.toLowerCase()} \u00B7 ` : ''}
-          {reminder.amount ? `KES ${reminder.amount.toLocaleString('en-US')} \u00B7 ` : ''}
-          {reminder.type === 'RECURRING' ? (reminder.recurrencePattern?.replace(/_/g, ' ').toLowerCase() ?? 'recurring') : 'One-time'}
+          {typeLabel}
         </Text>
       </View>
-      <View style={s.reminderTimeWrap}>
+      <View style={s.txRight}>
+        {reminder.amount != null && reminder.amount > 0 ? (
+          <Text style={s.txAmount}>{formatKes(reminder.amount)}</Text>
+        ) : null}
         {isUrgent ? (
-          <View style={s.urgentBadge}>
-            <Text style={s.urgentText}>{timeText}</Text>
+          <View style={[s.txBadge, { backgroundColor: colors.coralDim }]}>
+            <Text style={[s.txBadgeText, { color: colors.coral }]}>{timeText}</Text>
           </View>
         ) : reminder.status === 'SNOOZED' ? (
-          <View style={s.snoozedBadge}>
-            <Text style={s.snoozedText}>SNOOZED</Text>
+          <View style={[s.txBadge, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+            <Text style={[s.txBadgeText, { color: colors.t2 }]}>SNOOZED</Text>
           </View>
         ) : (
-          <Text style={s.reminderTime}>{timeText}</Text>
+          <Text style={s.txTime}>{timeText}</Text>
         )}
       </View>
-    </View>
+      <TabIcon name="chevron-right" color={colors.t3} size={16} />
+    </Pressable>
   );
 }
 
@@ -142,17 +168,6 @@ export function Reminders() {
 
   return (
     <View style={s.screen}>
-      {/* Header */}
-      <View style={s.header}>
-        <Pressable style={s.backBtn} onPress={() => router.back()}>
-          <TabIcon name="arrow-left" color={colors.t2} size={18} />
-        </Pressable>
-        <Text style={s.title}>Reminders</Text>
-        <Pressable style={s.addBtn}>
-          <TabIcon name="plus" color="#FFFFFF" size={20} />
-        </Pressable>
-      </View>
-
       {sections.length === 0 ? (
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>No reminders yet</Text>
@@ -162,6 +177,7 @@ export function Reminders() {
         </View>
       ) : (
         <SectionList
+          contentInsetAdjustmentBehavior="automatic"
           sections={sections}
           keyExtractor={(item) => item.id}
           stickySectionHeadersEnabled={false}
@@ -175,7 +191,9 @@ export function Reminders() {
               )}
             </View>
           )}
-          renderItem={({ item }) => <ReminderItem reminder={item} />}
+          renderItem={({ item }) => (
+            <ReminderItem reminder={item} />
+          )}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />
@@ -186,43 +204,6 @@ export function Reminders() {
 
 const mkStyles = (c: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
-
-  /* Header */
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 56,
-    paddingHorizontal: 22,
-    paddingBottom: 16,
-  },
-  backBtn: {
-    width: 30,
-    height: 30,
-    backgroundColor: c.bgCard,
-    borderWidth: 1,
-    borderColor: c.border,
-    borderRadius: radii.xs,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  backText: { fontSize: 16, color: c.t2 },
-  title: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: '700',
-    color: c.t1,
-    letterSpacing: -0.6,
-  },
-  addBtn: {
-    width: 36,
-    height: 36,
-    backgroundColor: c.coral,
-    borderRadius: radii.xs,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnText: { fontSize: 22, fontWeight: '300', color: '#FFFFFF' },
 
   /* Section headers */
   sectionHeader: {
@@ -241,6 +222,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   countBadge: {
     backgroundColor: c.coralDim,
     borderRadius: radii.pill,
+    borderCurve: 'continuous',
     paddingHorizontal: 7,
     paddingVertical: 2,
     marginLeft: 8,
@@ -251,65 +233,56 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.coral,
   },
 
-  /* Reminder item */
-  reminderRow: {
+  /* Transaction-style row */
+  txRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 22,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
     backgroundColor: c.bgCard,
     borderBottomWidth: 1,
     borderBottomColor: c.border,
   },
-  reminderDot: {
+  txDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 14,
+    marginRight: 12,
   },
-  reminderInfo: { flex: 1 },
-  reminderName: {
+  txCenter: { flex: 1 },
+  txDescription: {
     fontSize: 15,
     fontWeight: '600',
     color: c.t1,
-    marginBottom: 3,
   },
-  reminderSub: {
+  txCategory: {
     fontSize: 12,
-    fontWeight: '400',
     color: c.t3,
+    marginTop: 2,
   },
-  reminderTimeWrap: {
-    marginLeft: 12,
-    alignItems: 'flex-end',
+  txRight: { alignItems: 'flex-end' },
+  txAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: c.t1,
+    fontVariant: ['tabular-nums'],
   },
-  reminderTime: {
+  txBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderCurve: 'continuous',
+    marginTop: 4,
+  },
+  txBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  txTime: {
     fontSize: 12,
     fontWeight: '500',
     color: c.t2,
-  },
-  urgentBadge: {
-    backgroundColor: c.coralDim,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 7,
-  },
-  urgentText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: c.coral,
-  },
-  snoozedBadge: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 7,
-  },
-  snoozedText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: c.t2,
-    letterSpacing: 0.4,
+    marginTop: 2,
   },
 
   /* Empty */

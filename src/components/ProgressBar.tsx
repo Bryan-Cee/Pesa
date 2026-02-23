@@ -49,10 +49,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 100,
-    shadowColor: '#2ECC71',
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
+    boxShadow: '0 0 10px rgba(46, 204, 113, 0.22)',
   },
   dot: {
     position: 'absolute',
@@ -64,9 +61,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: '#4ADE80',
     borderWidth: 1.5,
     borderColor: c.bg,
-    shadowColor: '#2ECC71',
-    shadowOpacity: 0.22,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
+    boxShadow: '0 0 6px rgba(46, 204, 113, 0.22)',
   },
 });

@@ -90,11 +90,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.t1,
+    fontVariant: ['tabular-nums'],
   },
   typeBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
+    borderCurve: 'continuous',
     marginTop: 4,
   },
   typeBadgeText: {

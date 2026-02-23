@@ -12,10 +12,12 @@ import { useGoalStore } from '../stores/goalStore';
 import { ProgressBar } from '../components/ProgressBar';
 import { formatKes } from '../utils/formatters';
 import { CATEGORY_GROUP_META } from '../utils/constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function Insights() {
   const colors = useColors();
   const s = mkStyles(colors);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const months = useBudgetStore((st) => st.months);
   const allCategories = useBudgetStore((st) => st.categories);
@@ -117,7 +119,7 @@ export function Insights() {
   if (!selectedMonth) {
     return (
       <View style={s.screen}>
-        <View style={s.header}>
+        <View style={[s.header, { paddingTop: insets.top }]}>
           <Text style={s.title}>Insights</Text>
         </View>
         <Text style={s.empty}>No data yet</Text>
@@ -131,7 +133,7 @@ export function Insights() {
   return (
     <View style={s.screen}>
       {/* Header */}
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top }]}>
         <Text style={s.title}>Insights</Text>
         {/* Month selector pill */}
         <View style={s.monthPill}>
@@ -160,7 +162,7 @@ export function Insights() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">
         {/* Budget vs Actual */}
         <View style={s.chartSection}>
           <Text style={s.chartLabel}>BUDGET VS ACTUAL</Text>
@@ -316,7 +318,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 56,
     paddingHorizontal: 22,
     paddingBottom: 16,
   },
@@ -333,6 +334,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: radii.xs,
+    borderCurve: 'continuous',
     paddingVertical: 6,
     paddingHorizontal: 4,
   },
@@ -363,6 +365,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: radii.lg,
+    borderCurve: 'continuous',
     padding: 16,
   },
 
@@ -383,6 +386,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     height: 14,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: radii.pill,
+    borderCurve: 'continuous',
     marginHorizontal: 8,
     overflow: 'hidden',
     position: 'relative',
@@ -403,8 +407,8 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.pill,
   },
   barValueWrap: { width: 55, alignItems: 'flex-end' },
-  barValue: { fontSize: 11, fontWeight: '600', color: c.t2 },
-  barVariance: { fontSize: 11, fontWeight: '700' },
+  barValue: { fontSize: 11, fontWeight: '600', color: c.t2, fontVariant: ['tabular-nums'] as const },
+  barVariance: { fontSize: 11, fontWeight: '700', fontVariant: ['tabular-nums'] as const },
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -469,5 +473,5 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   breakdownDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   breakdownName: { flex: 1, fontSize: 12, color: c.t2, fontWeight: '500' },
-  breakdownPct: { fontSize: 13, fontWeight: '700', color: c.t1 },
+  breakdownPct: { fontSize: 13, fontWeight: '700', color: c.t1, fontVariant: ['tabular-nums'] as const },
 });

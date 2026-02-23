@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
@@ -23,12 +22,14 @@ import {
   CATEGORY_GROUP_META,
 } from '../utils/constants';
 import { getMonthLabel, formatKes } from '../utils/formatters';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ReviewCadence = 'DAILY' | 'EVERY_2_DAYS' | 'WEEKLY' | 'BI_WEEKLY' | 'CUSTOM';
 
 export function Onboarding() {
   const colors = useColors();
   const s = mkStyles(colors);
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [income, setIncome] = useState('375000');
   const [cadence, setCadence] = useState<ReviewCadence>('WEEKLY');
@@ -135,9 +136,9 @@ export function Onboarding() {
     return (
       <KeyboardAvoidingView
         style={s.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={s.stepContent}>
+        <View style={[s.stepContent, { paddingTop: insets.top + 40 }]}>
           <Text style={s.stepNumber}>Step 1 of 4</Text>
           <Text style={s.stepTitle}>What's your monthly take-home?</Text>
           <Text style={s.stepHelper}>
@@ -167,7 +168,7 @@ export function Onboarding() {
   if (step === 2) {
     return (
       <View style={s.screen}>
-        <View style={s.stepContent}>
+        <View style={[s.stepContent, { paddingTop: insets.top + 40 }]}>
           <Text style={s.stepNumber}>Step 2 of 4</Text>
           <Text style={s.stepTitle}>When should we remind you to review?</Text>
           <View style={s.cadenceRow}>
@@ -220,7 +221,7 @@ export function Onboarding() {
 
   return (
     <View style={s.screen}>
-      <View style={s.setupHeader}>
+      <View style={[s.setupHeader, { paddingTop: insets.top + 20 }]}>
         <Text style={s.stepNumber}>Step 3 of 4</Text>
         <Text style={s.stepTitle}>Set up your first budget</Text>
         <Text style={s.stepHelper}>
@@ -303,6 +304,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    borderCurve: 'continuous',
   },
   logoEmoji: {
     fontSize: 48,
@@ -338,11 +340,11 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   stepContent: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: 80,
+    paddingTop: 0,
   },
   setupHeader: {
     paddingHorizontal: spacing.lg,
-    paddingTop: 60,
+    paddingTop: 0,
     paddingBottom: spacing.md,
   },
   stepNumber: {
@@ -369,18 +371,19 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   incomeInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: c.bgCard,
     borderWidth: 1,
     borderColor: c.borderMed,
     borderRadius: radii.sm,
     paddingHorizontal: spacing.md,
     marginBottom: 32,
+    borderCurve: 'continuous',
   },
   kesLabel: {
     fontSize: 18,
     fontWeight: '500',
     color: c.t2,
-    marginRight: 8,
   },
   largeInput: {
     flex: 1,
@@ -389,17 +392,15 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.t1,
     letterSpacing: -2,
     paddingVertical: 16,
+    fontVariant: ['tabular-nums'],
   },
   primaryButton: {
     backgroundColor: c.coral,
     paddingVertical: 16,
     borderRadius: radii.button,
     alignItems: 'center',
-    shadowColor: '#2ECC71',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
-    elevation: 8,
+    boxShadow: '0 8px 24px rgba(46, 204, 113, 0.3)',
+    borderCurve: 'continuous',
   },
   primaryButtonText: {
     color: '#FFFFFF',
@@ -420,6 +421,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.bgCard,
     borderWidth: 1,
     borderColor: c.border,
+    borderCurve: 'continuous',
   },
   pillActive: {
     backgroundColor: c.coralDim,
@@ -446,6 +448,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     alignItems: 'center',
+    borderCurve: 'continuous',
   },
   dayChipActive: {
     backgroundColor: c.coralDim,
@@ -465,6 +468,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   catRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
     paddingVertical: 12,
     paddingHorizontal: spacing.md,
     backgroundColor: c.bgCard,
@@ -475,7 +479,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    marginRight: 10,
   },
   catLeft: {
     flex: 1,
@@ -495,11 +498,11 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   catInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   catKes: {
     fontSize: 11,
     color: c.t3,
-    marginRight: 4,
   },
   catInput: {
     fontSize: 15,
@@ -511,6 +514,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: c.border,
     paddingVertical: 4,
+    fontVariant: ['tabular-nums'],
   },
   summaryBar: {
     flexDirection: 'row',
@@ -520,6 +524,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.bgCard,
     borderTopWidth: 1,
     borderTopColor: c.border,
+    borderCurve: 'continuous',
   },
   summaryLabel: {
     fontSize: 10,
@@ -533,5 +538,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.t1,
     letterSpacing: -0.3,
+    fontVariant: ['tabular-nums'],
   },
 });

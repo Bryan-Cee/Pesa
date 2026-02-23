@@ -135,7 +135,12 @@ export function TransactionList() {
           title="No transactions yet"
           subtitle="Log your first transaction"
           actionLabel="Log Transaction"
-          onAction={() => router.push('/transaction-logger')}
+          onAction={() => router.push({
+            pathname: '/transaction-logger',
+            params: {
+              categoryId: params.categoryId,
+            },
+          })}
         />
       ) : (
         <SectionList

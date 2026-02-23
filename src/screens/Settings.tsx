@@ -9,6 +9,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { spacing, radii } from '../theme/spacing';
 import { useSettingsStore, Settings } from '../stores/settingsStore';
@@ -105,16 +106,7 @@ export function SettingsScreen() {
   const s = styles(colors);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={s.header}>
-        <Pressable style={s.backBtn} onPress={() => router.back()}>
-          <TabIcon name="arrow-left" color={colors.t2} size={18} />
-        </Pressable>
-        <Text style={s.title}>Settings</Text>
-        <View style={{ width: 30 }} />
-      </View>
-
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">
       {/* Profile */}
       <View style={s.profileCard}>
         <View style={[s.profileAvatar, { backgroundColor: colors.coralDim }]}>
@@ -131,7 +123,7 @@ export function SettingsScreen() {
 
       {/* Income editor */}
       {editingIncome && (
-        <View style={s.inlineEditor}>
+        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.inlineEditor}>
           <Text style={s.editorLabel}>MONTHLY INCOME</Text>
           <View style={s.editorInputRow}>
             <Text style={[s.editorKes, { color: colors.t3 }]}>KES</Text>
@@ -147,7 +139,7 @@ export function SettingsScreen() {
           <Pressable style={[s.saveBtn, { backgroundColor: colors.coral }]} onPress={saveIncome}>
             <Text style={s.saveBtnText}>Save</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       )}
 
       {/* Notifications */}
@@ -180,7 +172,7 @@ export function SettingsScreen() {
           <TabIcon name="chevron-right" color={colors.t3} size={18} />
         </Pressable>
         {showCadencePicker && (
-          <View style={s.pickerRow}>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.pickerRow}>
             {(Object.keys(cadenceLabels) as ReviewCadence[]).map((key) => (
               <OptionPill
                 key={key}
@@ -189,7 +181,7 @@ export function SettingsScreen() {
                 onPress={() => { updateSettings({ reviewCadence: key }); setShowCadencePicker(false); }}
               />
             ))}
-          </View>
+          </Animated.View>
         )}
         <View style={s.divider} />
         <View style={s.row}>
@@ -225,7 +217,7 @@ export function SettingsScreen() {
           <TabIcon name="chevron-right" color={colors.t3} size={18} />
         </Pressable>
         {showPayoffPicker && (
-          <View style={s.pickerRow}>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.pickerRow}>
             <OptionPill
               label="Avalanche"
               active={settings.debtPayoffMethod === 'AVALANCHE'}
@@ -236,7 +228,7 @@ export function SettingsScreen() {
               active={settings.debtPayoffMethod === 'SNOWBALL'}
               onPress={() => { updateSettings({ debtPayoffMethod: 'SNOWBALL' }); setShowPayoffPicker(false); }}
             />
-          </View>
+          </Animated.View>
         )}
         <View style={s.divider} />
         <Pressable style={s.row} onPress={() => setShowEmergencyPicker(!showEmergencyPicker)}>
@@ -250,7 +242,7 @@ export function SettingsScreen() {
           <TabIcon name="chevron-right" color={colors.t3} size={18} />
         </Pressable>
         {showEmergencyPicker && (
-          <View style={s.pickerRow}>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.pickerRow}>
             {[1, 2, 3, 4, 5].map((n) => (
               <OptionPill
                 key={n}
@@ -259,7 +251,7 @@ export function SettingsScreen() {
                 onPress={() => { updateSettings({ emergencyFundMultiplier: n }); setShowEmergencyPicker(false); }}
               />
             ))}
-          </View>
+          </Animated.View>
         )}
       </View>
 
@@ -292,7 +284,7 @@ export function SettingsScreen() {
           <TabIcon name="chevron-right" color={colors.t3} size={18} />
         </Pressable>
         {showThemePicker && (
-          <View style={s.pickerRow}>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.pickerRow}>
             {(['LIGHT', 'DARK', 'SYSTEM'] as const).map((t) => (
               <OptionPill
                 key={t}
@@ -301,7 +293,7 @@ export function SettingsScreen() {
                 onPress={() => { updateSettings({ theme: t }); setShowThemePicker(false); }}
               />
             ))}
-          </View>
+          </Animated.View>
         )}
       </View>
 
@@ -343,29 +335,10 @@ export function SettingsScreen() {
 // Dynamic styles using current theme colors
 const styles = (c: ReturnType<typeof useColors>) =>
   StyleSheet.create({
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingTop: 56,
-      paddingHorizontal: 22,
-      paddingBottom: 20,
-    },
-    backBtn: {
-      width: 36,
-      height: 36,
-      backgroundColor: c.bgCard,
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: 12,
-    },
-    title: { flex: 1, fontSize: 24, fontWeight: '700', color: c.t1, letterSpacing: -0.6 },
-
     profileCard: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 14,
       marginHorizontal: spacing.md,
       backgroundColor: c.bgCard,
       borderWidth: 1,
@@ -373,6 +346,7 @@ const styles = (c: ReturnType<typeof useColors>) =>
       borderRadius: radii.lg,
       padding: 16,
       marginBottom: 24,
+      borderCurve: 'continuous',
     },
     profileAvatar: {
       width: 44,
@@ -380,15 +354,16 @@ const styles = (c: ReturnType<typeof useColors>) =>
       borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 14,
+      borderCurve: 'continuous',
     },
     profileName: { fontSize: 17, fontWeight: '700', color: c.t1 },
-    profileSub: { fontSize: 12, color: c.t3, marginTop: 2 },
+    profileSub: { fontSize: 12, color: c.t3, marginTop: 2, fontVariant: ['tabular-nums'] },
     editBtn: {
       backgroundColor: c.coralDim,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: radii.button,
+      borderCurve: 'continuous',
     },
     editBtnText: { fontSize: 13, fontWeight: '600', color: c.coral },
 
@@ -400,12 +375,13 @@ const styles = (c: ReturnType<typeof useColors>) =>
       borderRadius: radii.md,
       padding: 16,
       marginBottom: 20,
+      borderCurve: 'continuous',
     },
     editorLabel: { fontSize: 11, fontWeight: '600', color: c.t3, letterSpacing: 0.6, marginBottom: 8 },
     editorInputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
     editorKes: { fontSize: 15, marginRight: 6 },
     editorInput: { flex: 1, fontSize: 22, fontWeight: '700', borderBottomWidth: 2, paddingVertical: 4 },
-    saveBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center' },
+    saveBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center', borderCurve: 'continuous' },
     saveBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 
     sectionTitle: { fontSize: 11, fontWeight: '600', color: c.t3, letterSpacing: 0.8, paddingHorizontal: 22, marginBottom: 8 },
@@ -417,20 +393,21 @@ const styles = (c: ReturnType<typeof useColors>) =>
       borderRadius: radii.md,
       marginBottom: 20,
       overflow: 'hidden',
+      borderCurve: 'continuous',
     },
     divider: { height: 1, backgroundColor: c.border, marginLeft: 60 },
 
-    row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14 },
-    rowIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 14 },
+    rowIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
     rowLabel: { fontSize: 15, fontWeight: '600', color: c.t1 },
     rowDesc: { fontSize: 12, color: c.t3, marginTop: 2 },
 
     pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 14, paddingBottom: 14 },
-    pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radii.button, borderWidth: 1 },
+    pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radii.button, borderWidth: 1, borderCurve: 'continuous' },
     pillText: { fontSize: 13, fontWeight: '600' },
 
     dangerInput: { paddingHorizontal: 14, paddingBottom: 14 },
-    resetInput: { borderWidth: 1, borderRadius: radii.xs, padding: 10, fontSize: 15, fontWeight: '700', marginBottom: 10 },
-    resetBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center' },
+    resetInput: { borderWidth: 1, borderRadius: radii.xs, padding: 10, fontSize: 15, fontWeight: '700', marginBottom: 10, borderCurve: 'continuous' },
+    resetBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center', borderCurve: 'continuous' },
     resetBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
   });

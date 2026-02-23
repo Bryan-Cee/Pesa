@@ -5,6 +5,7 @@ import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { DebtPlanner } from './DebtPlanner';
 import { SavingsGoals } from './SavingsGoals';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type PlanTab = 'debt' | 'goals';
 
@@ -13,10 +14,11 @@ export function Plan() {
 
   const colors = useColors();
   const s = mkStyles(colors);
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={s.screen}>
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top }]}>
         <Text style={s.title}>Plan</Text>
       </View>
       <View style={s.tabRow}>
@@ -52,7 +54,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.bg,
   },
   header: {
-    paddingTop: 60,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
     backgroundColor: 'transparent',
@@ -74,6 +75,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 20,
+    borderCurve: 'continuous',
     backgroundColor: c.bgCard,
     borderWidth: 1,
     borderColor: c.border,

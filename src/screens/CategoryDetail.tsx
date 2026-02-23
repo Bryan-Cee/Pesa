@@ -6,16 +6,20 @@ import {
   ScrollView,
   TextInput,
   Pressable,
+  Alert,
+  Modal,
 } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useColors } from '../hooks/useTheme';
+import { format } from 'date-fns';
+import { useColors, useIsDark } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useBudgetStore } from '../stores/budgetStore';
-import { useTransactionStore } from '../stores/transactionStore';
+import { useTransactionStore, Transaction } from '../stores/transactionStore';
 import { Card } from '../components/Card';
 import { ProgressBar } from '../components/ProgressBar';
-import { TransactionItem } from '../components/TransactionItem';
 import { formatKes, formatDateRelative } from '../utils/formatters';
 import { CATEGORY_GROUP_META } from '../utils/constants';
 import { useReminderStore } from '../stores/reminderStore';
@@ -28,9 +32,13 @@ export function CategoryDetail() {
   const allCategories = useBudgetStore((s) => s.categories);
   const updateCategory = useBudgetStore((s) => s.updateCategory);
   const allTransactions = useTransactionStore((s) => s.transactions);
+  const updateTransaction = useTransactionStore((s) => s.updateTransaction);
+  const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
+  const markAsPaid = useTransactionStore((s) => s.markAsPaid);
   const allReminders = useReminderStore((s) => s.reminders);
 
   const colors = useColors();
+  const isDark = useIsDark();
   const s = mkStyles(colors);
 
   const category = useMemo(
@@ -80,6 +88,36 @@ export function CategoryDetail() {
   const [editing, setEditing] = useState(false);
   const [editProjected, setEditProjected] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
+
+  // Edit transaction modal state
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [editTxAmount, setEditTxAmount] = useState('');
+  const [editTxDescription, setEditTxDescription] = useState('');
+  const [editTxNote, setEditTxNote] = useState('');
+
+  function openEditTx(tx: Transaction) {
+    setEditTxAmount(String(tx.amount));
+    setEditTxDescription(tx.description);
+    setEditTxNote(tx.note ?? '');
+    setEditingTx(tx);
+    setExpandedTxId(null);
+  }
+
+  function saveEditTx() {
+    if (!editingTx) return;
+    const amt = parseInt(editTxAmount, 10);
+    if (!amt || amt <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid amount.');
+      return;
+    }
+    updateTransaction(editingTx.id, {
+      amount: amt,
+      description: editTxDescription || editingTx.description,
+      note: editTxNote || undefined,
+    });
+    setEditingTx(null);
+  }
 
   if (!category) {
     return (
@@ -208,22 +246,134 @@ export function CategoryDetail() {
             </Text>
           </View>
           {transactions.map((tx) => {
-            const cat = getCategory(tx.categoryId);
+            const groupColor = CATEGORY_GROUP_META[category.group]?.color ?? colors.t3;
+            const isExpanded = expandedTxId === tx.id;
+            const typeLabel =
+              tx.type === 'FUTURE_PENDING' ? 'Upcoming' :
+              tx.type === 'FUTURE_PAID' ? 'Committed (Paid)' : 'Actual';
+
             return (
-              <TransactionItem
-                key={tx.id}
-                description={tx.description}
-                categoryName={cat?.name ?? ''}
-                categoryGroup={cat?.group ?? 'CUSTOM'}
-                amount={tx.amount}
-                type={tx.type}
-                note={tx.note}
-              />
+              <View key={tx.id}>
+                <Pressable
+                  style={s.txRow}
+                  onPress={() => setExpandedTxId(isExpanded ? null : tx.id)}
+                >
+                  <View style={[s.txDot, { backgroundColor: groupColor }]} />
+                  <View style={s.txCenter}>
+                    <Text style={s.txDescription} numberOfLines={1}>{tx.description}</Text>
+                    <Text style={s.txCategory} numberOfLines={1}>
+                      {category.name}{tx.note ? ` \u00B7 ${tx.note}` : ''}
+                    </Text>
+                  </View>
+                  <View style={s.txRight}>
+                    <Text style={s.txAmount}>{formatKes(tx.amount)}</Text>
+                    {tx.type === 'FUTURE_PENDING' && (
+                      <View style={[s.txBadge, { backgroundColor: colors.amberDim }]}>
+                        <Text style={[s.txBadgeText, { color: colors.amber }]}>Upcoming</Text>
+                      </View>
+                    )}
+                    {tx.type === 'FUTURE_PAID' && (
+                      <View style={[s.txBadge, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+                        <Text style={[s.txBadgeText, { color: colors.t2 }]}>Paid</Text>
+                      </View>
+                    )}
+                  </View>
+                </Pressable>
+
+                {isExpanded && (
+                  <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.txDetailPanel}>
+                    <View style={s.txDetailRow}>
+                      <Text style={s.txDetailLabel}>Date</Text>
+                      <Text style={s.txDetailValue}>
+                        {format(new Date(tx.date), 'EEE, d MMM yyyy')}
+                      </Text>
+                    </View>
+                    <View style={s.txDetailRow}>
+                      <Text style={s.txDetailLabel}>Amount</Text>
+                      <Text selectable style={s.txDetailValue}>{formatKes(tx.amount)}</Text>
+                    </View>
+                    <View style={s.txDetailRow}>
+                      <Text style={s.txDetailLabel}>Type</Text>
+                      <Text style={s.txDetailValue}>{typeLabel}</Text>
+                    </View>
+                    {tx.note ? (
+                      <View style={s.txDetailRow}>
+                        <Text style={s.txDetailLabel}>Note</Text>
+                        <Text style={[s.txDetailValue, { flex: 1, textAlign: 'right' }]} numberOfLines={3}>
+                          {tx.note}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {tx.rawSms ? (
+                      <View style={s.txDetailRow}>
+                        <Text style={s.txDetailLabel}>Source</Text>
+                        <Text style={s.txDetailValue}>SMS</Text>
+                      </View>
+                    ) : null}
+                    {tx.eventDate ? (
+                      <View style={s.txDetailRow}>
+                        <Text style={s.txDetailLabel}>Event Date</Text>
+                        <Text style={s.txDetailValue}>
+                          {format(new Date(tx.eventDate), 'EEE, d MMM yyyy')}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {/* Actions */}
+                    <View style={s.txActionRow}>
+                      <Pressable
+                        style={s.txActionBtn}
+                        onPress={() => openEditTx(tx)}
+                      >
+                        <TabIcon name="edit-2" color={colors.coral} size={14} />
+                        <Text style={[s.txActionText, { color: colors.coral }]}>Edit</Text>
+                      </Pressable>
+                      {tx.type === 'FUTURE_PENDING' && (
+                        <Pressable
+                          style={s.txActionBtn}
+                          onPress={() => {
+                            markAsPaid(tx.id);
+                            setExpandedTxId(null);
+                          }}
+                        >
+                          <TabIcon name="check" color={colors.green} size={14} />
+                          <Text style={[s.txActionText, { color: colors.green }]}>Mark Paid</Text>
+                        </Pressable>
+                      )}
+                      <Pressable
+                        style={s.txActionBtn}
+                        onPress={() =>
+                          Alert.alert('Delete Transaction', 'Remove this transaction?', [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Delete',
+                              style: 'destructive',
+                              onPress: () => {
+                                deleteTransaction(tx.id);
+                                setExpandedTxId(null);
+                              },
+                            },
+                          ])
+                        }
+                      >
+                        <TabIcon name="trash-2" color={colors.red} size={14} />
+                        <Text style={[s.txActionText, { color: colors.red }]}>Delete</Text>
+                      </Pressable>
+                    </View>
+                  </Animated.View>
+                )}
+              </View>
             );
           })}
           <Pressable
             style={s.addTxButton}
-            onPress={() => router.push('/transaction-logger')}
+            onPress={() => router.push({
+              pathname: '/transaction-logger',
+              params: {
+                categoryId: category?.id,
+                description: category?.name,
+              },
+            })}
           >
             <Text style={s.addTxText}>+ Add Transaction</Text>
           </Pressable>
@@ -250,6 +400,73 @@ export function CategoryDetail() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Edit Transaction Modal */}
+      <Modal visible={editingTx !== null} animationType="slide" transparent>
+        <View style={s.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setEditingTx(null)}>
+            <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+          </Pressable>
+
+          <View style={s.modalSheet}>
+            <View style={s.modalHandleRow}>
+              <View style={s.modalHandle} />
+            </View>
+            <View style={s.modalHeaderRow}>
+              <Text style={s.modalTitle}>Edit Transaction</Text>
+              <Pressable style={s.modalCloseBtn} onPress={() => setEditingTx(null)}>
+                <Text style={s.modalCloseBtnText}>Cancel</Text>
+              </Pressable>
+            </View>
+
+            <ScrollView style={s.modalContent} keyboardShouldPersistTaps="handled">
+              <View style={s.modalField}>
+                <Text style={s.modalLabel}>AMOUNT</Text>
+                <View style={s.modalAmountRow}>
+                  <Text style={s.modalKes}>KES</Text>
+                  <TextInput
+                    style={s.modalAmountInput}
+                    value={editTxAmount}
+                    onChangeText={setEditTxAmount}
+                    keyboardType="number-pad"
+                    selectionColor={colors.coral}
+                  />
+                </View>
+              </View>
+
+              <View style={s.modalField}>
+                <Text style={s.modalLabel}>DESCRIPTION</Text>
+                <TextInput
+                  style={s.modalTextInput}
+                  value={editTxDescription}
+                  onChangeText={setEditTxDescription}
+                  placeholder="Description"
+                  placeholderTextColor={colors.t3}
+                  selectionColor={colors.coral}
+                />
+              </View>
+
+              <View style={s.modalField}>
+                <Text style={s.modalLabel}>NOTE (OPTIONAL)</Text>
+                <TextInput
+                  style={s.modalTextInput}
+                  value={editTxNote}
+                  onChangeText={setEditTxNote}
+                  placeholder="Add a memo..."
+                  placeholderTextColor={colors.t3}
+                  selectionColor={colors.coral}
+                />
+              </View>
+
+              <Pressable style={s.modalSaveBtn} onPress={saveEditTx}>
+                <Text style={s.modalSaveBtnText}>Save Changes</Text>
+              </Pressable>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -393,6 +610,99 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
+  txRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    backgroundColor: c.bgCard,
+    borderBottomWidth: 1,
+    borderBottomColor: c.border,
+  },
+  txDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  txCenter: { flex: 1 },
+  txDescription: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: c.t1,
+  },
+  txCategory: {
+    fontSize: 12,
+    color: c.t3,
+    marginTop: 2,
+  },
+  txRight: { alignItems: 'flex-end' },
+  txAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: c.t1,
+    fontVariant: ['tabular-nums'],
+  },
+  txBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderCurve: 'continuous',
+    marginTop: 4,
+  },
+  txBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  txDetailPanel: {
+    backgroundColor: c.bgRaised,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: c.border,
+    gap: 10,
+  },
+  txDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  txDetailLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: c.t3,
+  },
+  txDetailValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: c.t1,
+    fontVariant: ['tabular-nums'],
+  },
+  txActionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 6,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: c.border,
+  },
+  txActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: radii.button,
+    borderCurve: 'continuous',
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  txActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   addTxButton: {
     paddingVertical: 14,
     alignItems: 'center',
@@ -430,4 +740,120 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   reminderInfo: { flex: 1 },
   reminderName: { fontSize: 15, fontWeight: '600', color: c.t1 },
   reminderSub: { fontSize: 12, color: c.t3, marginTop: 3 },
+
+  /* Edit Transaction Modal */
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    maxHeight: '88%',
+    backgroundColor: c.bgSheet,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: c.borderMed,
+  },
+  modalHandleRow: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 2,
+  },
+  modalHandle: {
+    width: 36,
+    height: 5,
+    borderRadius: 100,
+    backgroundColor: c.t3,
+    opacity: 0.4,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md + 4,
+    paddingTop: 8,
+    paddingBottom: spacing.sm,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: c.t1,
+  },
+  modalCloseBtn: {
+    backgroundColor: c.coralDim,
+    borderRadius: radii.button,
+    borderCurve: 'continuous',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  modalCloseBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: c.coral,
+  },
+  modalContent: {
+    paddingHorizontal: spacing.md + 4,
+  },
+  modalField: {
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: c.t3,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 6,
+  },
+  modalAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.borderMed,
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+    paddingHorizontal: 14,
+  },
+  modalKes: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: c.t3,
+    marginRight: 8,
+  },
+  modalAmountInput: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: '700',
+    color: c.t1,
+    paddingVertical: 12,
+    fontVariant: ['tabular-nums'],
+  },
+  modalTextInput: {
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.borderMed,
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    fontWeight: '500',
+    color: c.t1,
+  },
+  modalSaveBtn: {
+    backgroundColor: c.coral,
+    paddingVertical: 15,
+    borderRadius: radii.button,
+    borderCurve: 'continuous',
+    alignItems: 'center',
+    boxShadow: '0 4px 8px rgba(46, 204, 113, 0.3)',
+  },
+  modalSaveBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
 });

@@ -41,6 +41,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
+    borderCurve: 'continuous',
     backgroundColor: c.bgCard,
     borderWidth: 1,
     borderColor: c.border,
@@ -70,6 +71,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: radii.button,
+    borderCurve: 'continuous',
   },
   buttonText: {
     color: '#FFFFFF',

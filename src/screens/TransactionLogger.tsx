@@ -7,17 +7,20 @@ import {
   ScrollView,
   Pressable,
   Alert,
-  Platform,
   Switch,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { BlurView } from 'expo-blur';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useColors } from '../hooks/useTheme';
+import { useColors, useIsDark } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { radii } from '../theme/spacing';
 import { useBudgetStore } from '../stores/budgetStore';
 import { useTransactionStore, TransactionType } from '../stores/transactionStore';
+import { useReminderStore } from '../stores/reminderStore';
 import { parseSms } from '../utils/smsParser';
 import { formatKes } from '../utils/formatters';
 import { CATEGORY_GROUP_META, CATEGORY_GROUP_ORDER } from '../utils/constants';
@@ -26,18 +29,24 @@ type Tab = 'sms' | 'manual' | 'future';
 
 export function TransactionLogger() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    categoryId?: string;
+    description?: string;
+    tab?: Tab;
+  }>();
   const colors = useColors();
+  const isDark = useIsDark();
   const s = mkStyles(colors);
-  const [tab, setTab] = useState<Tab>('sms');
+  const [tab, setTab] = useState<Tab>(params.tab ?? (params.categoryId ? 'manual' : 'sms'));
   const [toast, setToast] = useState('');
 
   // SMS tab state
   const [smsText, setSmsText] = useState('');
   const [parsed, setParsed] = useState(false);
   const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(params.description ?? '');
   const [note, setNote] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(params.categoryId ?? '');
   const [rawSms, setRawSms] = useState('');
   const [parsedReference, setParsedReference] = useState('');
   const [parsedDate, setParsedDate] = useState('');
@@ -45,8 +54,10 @@ export function TransactionLogger() {
 
   // Future tab state
   const [futureStatus, setFutureStatus] = useState<'paid' | 'unpaid'>('unpaid');
-  const [paymentDate, setPaymentDate] = useState('');
-  const [eventDate, setEventDate] = useState('');
+  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
+  const [showPaymentPicker, setShowPaymentPicker] = useState(false);
+  const [eventDate, setEventDate] = useState<Date | null>(null);
+  const [showEventPicker, setShowEventPicker] = useState(false);
 
   // Reminder toggle
   const [reminderOn, setReminderOn] = useState(false);
@@ -60,6 +71,7 @@ export function TransactionLogger() {
   const months = useBudgetStore((s) => s.months);
   const allCategories = useBudgetStore((s) => s.categories);
   const addTransaction = useTransactionStore((s) => s.addTransaction);
+  const addReminder = useReminderStore((s) => s.addReminder);
 
   const currentMonth = useMemo(() => {
     const now = new Date();
@@ -86,7 +98,15 @@ export function TransactionLogger() {
     return CATEGORY_GROUP_ORDER.filter((g) => groupSet.has(g));
   }, [categories]);
 
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  // Auto-select group if category was prefilled
+  const initialGroup = useMemo(() => {
+    if (params.categoryId) {
+      const cat = allCategories.find((c) => c.id === params.categoryId);
+      return cat?.group ?? null;
+    }
+    return null;
+  }, []);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(initialGroup);
 
   function handleParse() {
     const result = parseSms(smsText);
@@ -119,12 +139,14 @@ export function TransactionLogger() {
       type = futureStatus === 'paid' ? 'FUTURE_PAID' : 'FUTURE_PENDING';
     }
 
+    const txDate = paymentDate ? paymentDate.toISOString() : new Date().toISOString();
+
     addTransaction({
       monthId: currentMonth.id,
       categoryId: selectedCategoryId,
       amount: amountNum,
       description: description || 'Transaction',
-      date: new Date().toISOString(),
+      date: txDate,
       type,
       note: note || undefined,
       rawSms: rawSms || undefined,
@@ -134,7 +156,35 @@ export function TransactionLogger() {
     const catName =
       categories.find((c) => c.id === selectedCategoryId)?.name ?? 'Budget';
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Create reminder if toggle is on
+    if (reminderOn) {
+      const reminderDate = paymentDate ?? new Date();
+      // Set reminder 1 day before the payment/event date
+      const fireDate = new Date(reminderDate);
+      fireDate.setDate(fireDate.getDate() - 1);
+      // If fire date is in the past, set to tomorrow
+      if (fireDate <= new Date()) {
+        fireDate.setDate(new Date().getDate() + 1);
+      }
+
+      addReminder({
+        name: description || catName,
+        type: tab === 'future' ? 'RECURRING' : 'ONE_TIME',
+        linkedType: 'TRANSACTION',
+        amount: amountNum,
+        categoryId: selectedCategoryId,
+        recurrencePattern: tab === 'future' ? 'MONTHLY_DATE' : undefined,
+        leadTimeDays: 1,
+        nextFireDate: fireDate.toISOString(),
+        dueDate: txDate,
+        message: `Reminder: ${description || catName} - KES ${amountNum.toLocaleString('en-US')}`,
+        status: 'ACTIVE',
+      });
+    }
+
+    if (process.env.EXPO_OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setToast(`Logged to ${catName}`);
     setTimeout(() => setToast(''), 3000);
 
@@ -150,13 +200,16 @@ export function TransactionLogger() {
     setParsedDate('');
     setParsedMerchant('');
     setSelectedGroup(null);
+    setReminderOn(false);
+    setPaymentDate(null);
+    setEventDate(null);
   }
 
   function renderCategoryPicker() {
     if (!showCategoryPicker) return null;
     return (
-      <View style={s.pickerOverlay}>
-        <ScrollView style={s.pickerList}>
+      <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.pickerOverlay}>
+        <ScrollView style={s.pickerList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
           {categories.map((cat) => (
             <Pressable
               key={cat.id}
@@ -182,7 +235,7 @@ export function TransactionLogger() {
             </Pressable>
           ))}
         </ScrollView>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -215,25 +268,27 @@ export function TransactionLogger() {
 
   return (
     <View style={s.overlay}>
-      {/* Backdrop — tap to dismiss */}
-      <Pressable style={s.backdrop} onPress={() => router.back()} />
+      {/* Blur backdrop — tap to dismiss */}
+      <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()}>
+        <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+      </Pressable>
 
       {/* Sheet */}
       <View style={s.sheet}>
         {/* Drag handle */}
-        <View style={s.dragHandleRow}>
-          <View style={s.dragHandle} />
+        <View style={s.handleRow}>
+          <View style={s.handle} />
         </View>
 
         {/* Header */}
-        <View style={s.header}>
-        <Text style={s.headerTitle}>Log Transaction</Text>
-        <Pressable style={s.doneButton} onPress={() => router.back()}>
-          <Text style={s.doneText}>Done</Text>
-        </Pressable>
-      </View>
+        <View style={s.sheetHeader}>
+          <Text style={s.sheetTitle}>Log Transaction</Text>
+          <Pressable style={s.closeBtn} onPress={() => router.back()}>
+            <Text style={s.closeBtnText}>Done</Text>
+          </Pressable>
+        </View>
 
-      {/* Tabs */}
+        {/* Tabs */}
       <View style={s.tabRow}>
         {tabs.map((t) => (
           <Pressable
@@ -390,19 +445,19 @@ export function TransactionLogger() {
         {tab === 'sms' && parsed && (
           <View>
             {/* Parsed success tag */}
-            <View style={s.parsedTag}>
+            <Animated.View entering={FadeIn.duration(300)} style={s.parsedTag}>
               <Text style={s.parsedTagText}>
                 {'\u2713'} PARSED SUCCESSFULLY
               </Text>
-            </View>
+            </Animated.View>
 
             {/* Parsed card */}
-            <View style={s.parsedCard}>
+            <Animated.View entering={FadeIn.duration(300)} style={s.parsedCard}>
               {/* Amount + Reference row */}
               <View style={s.parsedAmountRow}>
                 <View style={s.parsedAmountLeft}>
                   <Text style={s.parsedKes}>KES</Text>
-                  <Text style={s.parsedAmount}>
+                  <Text selectable style={s.parsedAmount}>
                     {amountNum > 0 ? amountNum.toLocaleString('en-US') : '0'}
                   </Text>
                 </View>
@@ -430,7 +485,7 @@ export function TransactionLogger() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Category group chips */}
             <Text style={s.fieldLabel}>CATEGORY</Text>
@@ -803,34 +858,56 @@ export function TransactionLogger() {
             <View style={s.dateRow}>
               <View style={s.dateField}>
                 <Text style={s.fieldLabel}>PAYMENT DATE</Text>
-                <TextInput
-                  style={[
-                    s.textInput,
-                    focusedField === 'paydate' && s.fieldFocused,
-                  ]}
-                  value={paymentDate}
-                  onChangeText={setPaymentDate}
-                  placeholder="DD Mon YYYY"
-                  placeholderTextColor={colors.t3}
-                  onFocus={() => setFocusedField('paydate')}
-                  onBlur={() => setFocusedField(null)}
-                />
+                <Pressable
+                  style={s.datePickerBtn}
+                  onPress={() => setShowPaymentPicker(true)}
+                >
+                  <Text style={paymentDate ? s.datePickerValue : s.datePickerPlaceholder}>
+                    {paymentDate
+                      ? paymentDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : 'Select date'}
+                  </Text>
+                </Pressable>
+                {showPaymentPicker && (
+                  <DateTimePicker
+                    value={paymentDate ?? new Date()}
+                    mode="date"
+                    display="inline"
+                    themeVariant={isDark ? 'dark' : 'light'}
+                    accentColor={colors.coral}
+                    onChange={(_, date) => {
+                      setShowPaymentPicker(false);
+                      if (date) setPaymentDate(date);
+                    }}
+                  />
+                )}
               </View>
               <View style={s.dateFieldSpacer} />
               <View style={s.dateField}>
                 <Text style={s.fieldLabel}>EVENT DATE</Text>
-                <TextInput
-                  style={[
-                    s.textInput,
-                    focusedField === 'evtdate' && s.fieldFocused,
-                  ]}
-                  value={eventDate}
-                  onChangeText={setEventDate}
-                  placeholder="DD Mon YYYY"
-                  placeholderTextColor={colors.t3}
-                  onFocus={() => setFocusedField('evtdate')}
-                  onBlur={() => setFocusedField(null)}
-                />
+                <Pressable
+                  style={s.datePickerBtn}
+                  onPress={() => setShowEventPicker(true)}
+                >
+                  <Text style={eventDate ? s.datePickerValue : s.datePickerPlaceholder}>
+                    {eventDate
+                      ? eventDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : 'Select date'}
+                  </Text>
+                </Pressable>
+                {showEventPicker && (
+                  <DateTimePicker
+                    value={eventDate ?? new Date()}
+                    mode="date"
+                    display="inline"
+                    themeVariant={isDark ? 'dark' : 'light'}
+                    accentColor={colors.coral}
+                    onChange={(_, date) => {
+                      setShowEventPicker(false);
+                      if (date) setEventDate(date);
+                    }}
+                  />
+                )}
               </View>
             </View>
 
@@ -896,9 +973,9 @@ export function TransactionLogger() {
 
         {/* Toast */}
         {toast ? (
-          <View style={s.toast}>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.toast}>
             <Text style={s.toastText}>{'\u2713'} {toast}</Text>
-          </View>
+          </Animated.View>
         ) : null}
       </View>
     </View>
@@ -910,32 +987,30 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
   sheet: {
-    maxHeight: '85%',
+    maxHeight: '88%',
     backgroundColor: c.bgSheet,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderBottomWidth: 0,
     borderColor: c.borderMed,
     paddingBottom: 34,
   },
-  dragHandleRow: {
+  handleRow: {
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 4,
+    paddingTop: 10,
+    paddingBottom: 2,
   },
-  dragHandle: {
+  handle: {
     width: 36,
-    height: 4,
+    height: 5,
     borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: c.t3,
+    opacity: 0.4,
   },
-  header: {
+  sheetHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -943,23 +1018,23 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingTop: 8,
     paddingBottom: spacing.sm,
   },
-  headerTitle: {
+  sheetTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: c.t1,
   },
-  doneButton: {
+  closeBtn: {
     backgroundColor: c.coralDim,
     borderRadius: radii.button,
+    borderCurve: 'continuous',
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
-  doneText: {
+  closeBtnText: {
     fontSize: 14,
     fontWeight: '600',
     color: c.coral,
   },
-
   /* Tabs */
   tabRow: {
     flexDirection: 'row',
@@ -1003,6 +1078,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.md,
     padding: 14,
     marginBottom: spacing.md,
+    borderCurve: 'continuous',
   },
   pasteAreaFocused: {
     borderColor: c.borderFocus,
@@ -1067,6 +1143,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.borderMed,
     backgroundColor: c.bgCard,
+    borderCurve: 'continuous',
   },
   chipActive: {
     backgroundColor: c.coralDim,
@@ -1098,6 +1175,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: c.t1,
+    borderCurve: 'continuous',
   },
 
   /* Toggle row */
@@ -1123,11 +1201,8 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.button,
     alignItems: 'center',
     marginTop: spacing.md,
-    shadowColor: c.coral,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: '0 4px 8px rgba(46, 204, 113, 0.3)',
+    borderCurve: 'continuous',
   },
   logButtonText: {
     color: '#FFFFFF',
@@ -1145,6 +1220,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
     marginBottom: spacing.sm,
+    borderCurve: 'continuous',
   },
   parsedTagText: {
     fontSize: 11,
@@ -1162,6 +1238,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.md,
     marginBottom: spacing.md,
+    borderCurve: 'continuous',
   },
   parsedAmountRow: {
     flexDirection: 'row',
@@ -1184,6 +1261,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.t1,
     letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
   },
   parsedRef: {
     fontSize: 13,
@@ -1225,6 +1303,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderCurve: 'continuous',
   },
   lineItemSelected: {
     fontSize: 14,
@@ -1259,6 +1338,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.borderMed,
     borderRadius: radii.sm,
     paddingHorizontal: 14,
+    borderCurve: 'continuous',
   },
   kesPrefix: {
     fontSize: 13,
@@ -1272,6 +1352,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.t1,
     paddingVertical: 12,
+    fontVariant: ['tabular-nums'],
   },
 
   /* Future tiles */
@@ -1289,6 +1370,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.border,
     backgroundColor: c.bgCard,
     alignItems: 'center',
+    borderCurve: 'continuous',
   },
   futureTileActive: {
     backgroundColor: c.coralDim,
@@ -1320,6 +1402,24 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   dateFieldSpacer: {
     width: 8,
   },
+  datePickerBtn: {
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.borderMed,
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  datePickerValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: c.t1,
+  },
+  datePickerPlaceholder: {
+    fontSize: 14,
+    color: c.t3,
+  },
 
   /* Category button (future tab) */
   categoryButton: {
@@ -1332,6 +1432,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderCurve: 'continuous',
   },
   categorySelectedRow: {
     flexDirection: 'row',
@@ -1365,11 +1466,14 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.borderMed,
     borderRadius: radii.sm,
-    maxHeight: 200,
+    height: 220,
     marginTop: 6,
     marginBottom: spacing.sm,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
   },
   pickerList: {
+    flex: 1,
     padding: spacing.sm,
   },
   pickerItem: {
@@ -1410,6 +1514,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: 10,
     alignItems: 'center',
+    borderCurve: 'continuous',
   },
   toastText: {
     color: c.green,

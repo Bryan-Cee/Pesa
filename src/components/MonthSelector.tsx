@@ -77,6 +77,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: 8,
+    borderCurve: 'continuous',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -102,6 +103,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
+    borderCurve: 'continuous',
     marginLeft: 8,
   },
   lockedText: {

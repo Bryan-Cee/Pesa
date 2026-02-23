@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
@@ -110,10 +111,14 @@ export function DebtPlanner() {
   }
 
   function saveEdit() {
+    const balance = parseInt(editBalance, 10);
+    const apr = parseInt(editApr, 10);
+    const payment = parseInt(editPayment, 10);
+
     updateDebt(debt!.id, {
-      currentBalance: parseInt(editBalance, 10) || debt!.currentBalance,
-      apr: (parseInt(editApr, 10) || debt!.apr * 100) / 100,
-      monthlyPayment: parseInt(editPayment, 10) || debt!.monthlyPayment,
+      currentBalance: isNaN(balance) ? debt!.currentBalance : balance,
+      apr: (isNaN(apr) ? debt!.apr * 100 : apr) / 100,
+      monthlyPayment: isNaN(payment) ? debt!.monthlyPayment : payment,
     });
     setEditing(false);
   }
@@ -133,7 +138,7 @@ export function DebtPlanner() {
 
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">
         {/* Header */}
         <View style={s.header}>
           <Text style={s.headerTitle}>Debt Planner</Text>
@@ -157,7 +162,7 @@ export function DebtPlanner() {
             {/* Right side info */}
             <View style={s.summaryInfo}>
               <Text style={s.debtEyebrow}>{debt.name.toUpperCase()}</Text>
-              <Text style={s.balanceAmount}>
+              <Text selectable style={s.balanceAmount}>
                 {debt.currentBalance.toLocaleString('en-US')}
               </Text>
               <Text style={s.balanceSub}>
@@ -178,13 +183,13 @@ export function DebtPlanner() {
           <View style={s.statsRow}>
             <View style={s.statBox}>
               <Text style={s.statLabel}>TOTAL INTEREST LEFT</Text>
-              <Text style={[s.statValue, { color: colors.debtRed }]}>
+              <Text selectable style={[s.statValue, { color: colors.debtRed }]}>
                 {projection.totalInterestRemaining.toLocaleString('en-US')}
               </Text>
             </View>
             <View style={s.statBox}>
               <Text style={s.statLabel}>ORIGINAL BALANCE</Text>
-              <Text style={s.statValue}>
+              <Text selectable style={s.statValue}>
                 {debt.originalBalance.toLocaleString('en-US')}
               </Text>
             </View>
@@ -192,7 +197,7 @@ export function DebtPlanner() {
           <View style={s.statsRow}>
             <View style={s.statBox}>
               <Text style={s.statLabel}>MONTHS TO FREEDOM</Text>
-              <Text style={s.statValue}>
+              <Text selectable style={s.statValue}>
                 {projection.monthsToPayoff === Infinity
                   ? '\u221E'
                   : projection.monthsToPayoff}
@@ -215,7 +220,7 @@ export function DebtPlanner() {
             </View>
             <View style={s.statBox}>
               <Text style={s.statLabel}>PAID SO FAR</Text>
-              <Text style={[s.statValue, { color: colors.green }]}>
+              <Text selectable style={[s.statValue, { color: colors.green }]}>
                 {paidSoFar.toLocaleString('en-US')}
               </Text>
             </View>
@@ -224,47 +229,49 @@ export function DebtPlanner() {
 
         {/* Edit Card */}
         {editing && (
-          <Card style={s.editCard}>
-            <Text style={s.editTitle}>Edit Debt</Text>
-            <View style={s.editField}>
-              <Text style={s.editLabel}>Current Balance (KES)</Text>
-              <TextInput
-                style={s.editInput}
-                value={editBalance}
-                onChangeText={setEditBalance}
-                keyboardType="number-pad"
-                placeholderTextColor={colors.t3}
-              />
-            </View>
-            <View style={s.editField}>
-              <Text style={s.editLabel}>APR (%)</Text>
-              <TextInput
-                style={s.editInput}
-                value={editApr}
-                onChangeText={setEditApr}
-                keyboardType="number-pad"
-                placeholderTextColor={colors.t3}
-              />
-            </View>
-            <View style={s.editField}>
-              <Text style={s.editLabel}>Monthly Payment (KES)</Text>
-              <TextInput
-                style={s.editInput}
-                value={editPayment}
-                onChangeText={setEditPayment}
-                keyboardType="number-pad"
-                placeholderTextColor={colors.t3}
-              />
-            </View>
-            <View style={s.editActions}>
-              <Pressable onPress={() => setEditing(false)}>
-                <Text style={s.cancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={s.saveBtn} onPress={saveEdit}>
-                <Text style={s.saveBtnText}>Save</Text>
-              </Pressable>
-            </View>
-          </Card>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
+            <Card style={s.editCard}>
+              <Text style={s.editTitle}>Edit Debt</Text>
+              <View style={s.editField}>
+                <Text style={s.editLabel}>Current Balance (KES)</Text>
+                <TextInput
+                  style={s.editInput}
+                  value={editBalance}
+                  onChangeText={setEditBalance}
+                  keyboardType="number-pad"
+                  placeholderTextColor={colors.t3}
+                />
+              </View>
+              <View style={s.editField}>
+                <Text style={s.editLabel}>APR (%)</Text>
+                <TextInput
+                  style={s.editInput}
+                  value={editApr}
+                  onChangeText={setEditApr}
+                  keyboardType="number-pad"
+                  placeholderTextColor={colors.t3}
+                />
+              </View>
+              <View style={s.editField}>
+                <Text style={s.editLabel}>Monthly Payment (KES)</Text>
+                <TextInput
+                  style={s.editInput}
+                  value={editPayment}
+                  onChangeText={setEditPayment}
+                  keyboardType="number-pad"
+                  placeholderTextColor={colors.t3}
+                />
+              </View>
+              <View style={s.editActions}>
+                <Pressable onPress={() => setEditing(false)}>
+                  <Text style={s.cancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={s.saveBtn} onPress={saveEdit}>
+                  <Text style={s.saveBtnText}>Save</Text>
+                </Pressable>
+              </View>
+            </Card>
+          </Animated.View>
         )}
 
         {/* What If I Pay More? */}
@@ -437,7 +444,13 @@ export function DebtPlanner() {
           )}
           <Pressable
             style={s.logPaymentBtn}
-            onPress={() => router.push('/transaction-logger')}
+            onPress={() => router.push({
+              pathname: '/transaction-logger',
+              params: {
+                categoryId: debt?.linkedCategoryId,
+                description: `${debt?.name} payment`,
+              },
+            })}
           >
             <Text style={s.logPaymentText}>Log Payment</Text>
           </Pressable>
@@ -480,6 +493,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
+    borderCurve: 'continuous',
   },
   settingsIcon: {
     fontSize: 18,
@@ -495,13 +509,14 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
+    borderCurve: 'continuous',
   },
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
   ringContainer: {
-    marginRight: 16,
   },
   ring: {
     width: 120,
@@ -510,10 +525,12 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    borderCurve: 'continuous',
   },
   ringPercent: {
     fontSize: 20,
     fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   ringLabel: {
     fontSize: 11,
@@ -536,6 +553,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: c.debtRed,
     marginBottom: 4,
+    fontVariant: ['tabular-nums'],
   },
   balanceSub: {
     fontSize: 12,
@@ -548,6 +566,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radii.pill,
+    borderCurve: 'continuous',
   },
   freeByText: {
     fontSize: 11,
@@ -572,6 +591,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.border,
     borderRadius: radii.sm,
     padding: 12,
+    borderCurve: 'continuous',
   },
   statLabel: {
     fontSize: 9,
@@ -585,6 +605,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: c.t1,
+    fontVariant: ['tabular-nums'],
   },
   miniProgressTrack: {
     height: 3,
@@ -606,6 +627,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.borderMed,
     borderRadius: radii.lg,
+    borderCurve: 'continuous',
   },
   editTitle: {
     fontSize: 17,
@@ -656,6 +678,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.borderMed,
     borderRadius: radii.lg,
     padding: spacing.md,
+    borderCurve: 'continuous',
   },
   sectionLabel: {
     fontSize: 10,
@@ -683,6 +706,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: c.t1,
+    fontVariant: ['tabular-nums'],
   },
   simResultRight: {
     alignItems: 'flex-end',
@@ -726,10 +750,8 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.bgCard,
     top: -6,
     marginLeft: -9,
-    shadowColor: c.coral,
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
+    boxShadow: '0 0 6px rgba(46, 204, 113, 0.4)',
+    borderCurve: 'continuous',
   },
   sliderLabels: {
     flexDirection: 'row',
@@ -755,6 +777,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
     alignItems: 'center',
+    borderCurve: 'continuous',
   },
   chipActive: {
     backgroundColor: c.coralDim,
@@ -773,12 +796,12 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   simInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 16,
   },
   simInputLabel: {
     fontSize: 13,
     color: c.t3,
-    marginRight: 8,
   },
   simInput: {
     flex: 1,
@@ -796,6 +819,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 14,
     borderRadius: radii.button,
     alignItems: 'center',
+    borderCurve: 'continuous',
   },
   applyBtnDisabled: {
     opacity: 0.4,
@@ -822,6 +846,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: radii.sm,
+    borderCurve: 'continuous',
   },
   timelinePillLabel: {
     fontSize: 12,
@@ -854,9 +879,9 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   paymentDate: { fontSize: 12, color: c.t3, width: 80 },
   paymentDetails: { flex: 1 },
-  paymentAmount: { fontSize: 15, fontWeight: '700', color: c.t1 },
+  paymentAmount: { fontSize: 15, fontWeight: '700', color: c.t1, fontVariant: ['tabular-nums'] },
   paymentBreakdown: { fontSize: 11, color: c.t3, marginTop: 2 },
-  paymentBalance: { fontSize: 13, fontWeight: '600', color: c.t2 },
+  paymentBalance: { fontSize: 13, fontWeight: '600', color: c.t2, fontVariant: ['tabular-nums'] },
   logPaymentBtn: {
     paddingVertical: 14,
     alignItems: 'center',

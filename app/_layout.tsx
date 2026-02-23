@@ -93,11 +93,23 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="reminders"
-          options={{ presentation: 'card', headerShown: false }}
+          options={{
+            presentation: 'card',
+            headerShown: true,
+            headerTitle: 'Reminders',
+            headerTintColor: colors.t1,
+            headerStyle: { backgroundColor: colors.bg },
+          }}
         />
         <Stack.Screen
           name="settings"
-          options={{ presentation: 'card', headerShown: false }}
+          options={{
+            presentation: 'card',
+            headerShown: true,
+            headerTitle: 'Settings',
+            headerTintColor: colors.t1,
+            headerStyle: { backgroundColor: colors.bg },
+          }}
         />
       </Stack>
     </ThemeProvider>
