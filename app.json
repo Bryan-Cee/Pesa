@@ -54,32 +54,6 @@
     "extra": {
       "router": {},
       "eas": {
-        "build": {
-          "experimental": {
-            "ios": {
-              "appExtensions": [
-                {
-                  "targetName": "PesaShare",
-                  "bundleIdentifier": "com.pesa.app.share-extension",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.com.pesa.app"
-                    ]
-                  }
-                },
-                {
-                  "targetName": "PesaShare",
-                  "bundleIdentifier": "com.pesa.app.share-extension",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.com.pesa.app"
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        },
         "projectId": "b05e8d9b-a42c-4554-8025-5bb2d98d2f5b"
       }
     },
