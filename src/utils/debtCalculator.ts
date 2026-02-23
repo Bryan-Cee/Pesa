@@ -40,6 +40,39 @@ export function calculateDebtProjection(
     };
   }
 
+  // 0% interest — simple division, no logarithms needed
+  if (apr === 0) {
+    const months = Math.ceil(currentBalance / monthlyPayment);
+    const now = new Date();
+    const totalPaidSoFar = originalBalance - currentBalance;
+    const milestones: { percent: number; date: string; label: string }[] = [];
+    const milestonePercents = [25, 50, 75, 100];
+    let balance = currentBalance;
+
+    for (let i = 0; i < months && balance > 0; i++) {
+      const principal = Math.min(monthlyPayment, balance);
+      balance -= principal;
+      const percentPaid = ((originalBalance - Math.max(balance, 0)) / originalBalance) * 100;
+
+      for (const mp of milestonePercents) {
+        if (percentPaid >= mp && !milestones.find((m) => m.percent === mp)) {
+          milestones.push({
+            percent: mp,
+            date: format(addMonths(now, i + 1), 'MMMM yyyy'),
+            label: mp === 100 ? 'Debt Free!' : `${mp}% paid`,
+          });
+        }
+      }
+    }
+
+    return {
+      monthsToPayoff: months,
+      totalInterestRemaining: 0,
+      payoffDate: format(addMonths(now, months), 'MMMM yyyy'),
+      milestones,
+    };
+  }
+
   const monthsToPayoff = Math.ceil(
     -Math.log(1 - (monthlyRate * currentBalance) / monthlyPayment) /
       Math.log(1 + monthlyRate)

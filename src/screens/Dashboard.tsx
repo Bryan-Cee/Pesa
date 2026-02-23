@@ -98,10 +98,24 @@ export function Dashboard() {
   }, [transactions]);
 
 
-  const primaryDebt = useMemo(
-    () => debts.find((d) => d.isPrimary) ?? null,
+  const activeDebts = useMemo(
+    () => debts.filter((d) => d.currentBalance > 0),
     [debts],
   );
+
+  const debtAggregates = useMemo(() => {
+    if (activeDebts.length === 0) return null;
+    const totalDebt = activeDebts.reduce((s, d) => s + d.currentBalance, 0);
+    const totalMonthly = activeDebts.reduce((s, d) => s + d.monthlyPayment, 0);
+    const projections = activeDebts.map((d) =>
+      calculateDebtProjection(d.currentBalance, d.apr, d.monthlyPayment, d.originalBalance)
+    );
+    const payoffDates = projections
+      .map((p) => p.payoffDate)
+      .filter((d) => d !== 'Never');
+    const earliestPayoff = payoffDates.length > 0 ? payoffDates[0] : 'Never';
+    return { totalDebt, totalMonthly, earliestPayoff, projections };
+  }, [activeDebts]);
 
   const activeGoals = useMemo(
     () => goals.filter((g) => !g.isArchived),
@@ -150,19 +164,6 @@ export function Dashboard() {
     }
   }
 
-  const debtProjection = primaryDebt
-    ? calculateDebtProjection(
-        primaryDebt.currentBalance,
-        primaryDebt.apr,
-        primaryDebt.monthlyPayment,
-        primaryDebt.originalBalance,
-      )
-    : null;
-  const debtPercentPaid = primaryDebt
-    ? ((primaryDebt.originalBalance - primaryDebt.currentBalance) /
-        primaryDebt.originalBalance) *
-      100
-    : 0;
 
   const totalActualFormatted = totalActual.toLocaleString("en-US");
 
@@ -347,64 +348,105 @@ export function Dashboard() {
         )}
 
         {/* ── Debt Tracker ── */}
-        {primaryDebt && debtProjection && (
+        {activeDebts.length > 0 && debtAggregates && (
           <View style={s.section}>
             <View style={s.sectionRow}>
               <Text style={s.sectionLabel}>DEBT TRACKER</Text>
-              <Link
-                href={{
-                  pathname: "/debt-planner",
-                  params: { debtId: primaryDebt.id },
-                }}
-                asChild
-              >
+              <Link href="/plan" asChild>
                 <Pressable>
                   <Text style={s.sectionLink}>Details</Text>
                 </Pressable>
               </Link>
             </View>
-            <Link
-              href={{
-                pathname: "/debt-planner",
-                params: { debtId: primaryDebt.id },
-              }}
-              asChild
+
+            {/* Aggregate stats */}
+            <View style={s.debtStatsRow}>
+              <View style={s.debtStatBox}>
+                <Text style={s.debtStatLabel}>TOTAL DEBT</Text>
+                <Text style={[s.debtStatValue, { color: colors.debtRed }]}>
+                  {formatKes(debtAggregates.totalDebt)}
+                </Text>
+              </View>
+              <View style={s.debtStatBox}>
+                <Text style={s.debtStatLabel}>MONTHLY</Text>
+                <Text style={s.debtStatValue}>
+                  {formatKes(debtAggregates.totalMonthly)}
+                </Text>
+              </View>
+              <View style={s.debtStatBox}>
+                <Text style={s.debtStatLabel}>FIRST FREE</Text>
+                <Text style={[s.debtStatValue, { color: colors.green, fontSize: 13 }]}>
+                  {debtAggregates.earliestPayoff}
+                </Text>
+              </View>
+            </View>
+
+            {/* Horizontal debt cards */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={s.debtScroll}
             >
-              <Pressable
-                style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}
-              >
-                <View style={s.debtCard}>
-                  <View style={s.debtLeftStripe} />
-                  <View style={s.debtContent}>
-                    {/* Ring */}
-                    <View style={s.debtRing}>
-                      <Text style={s.debtRingPercent}>
-                        {Math.round(debtPercentPaid)}%
-                      </Text>
-                      <Text style={s.debtRingLabel}>paid</Text>
-                    </View>
-                    {/* Body */}
-                    <View style={s.debtBody}>
-                      <Text style={s.debtEyebrow}>
-                        {primaryDebt.name.toUpperCase()}
-                      </Text>
-                      <Text selectable style={s.debtBalance}>
-                        {primaryDebt.currentBalance.toLocaleString("en-US")}
-                      </Text>
-                      <Text style={s.debtSub}>
-                        KES {primaryDebt.monthlyPayment.toLocaleString("en-US")}{" "}
-                        {"\u00B7"} {Math.round(primaryDebt.apr * 100)}% APR
-                      </Text>
-                      <View style={s.debtPayoffTag}>
-                        <Text style={s.debtPayoffText}>
-                          Free by {debtProjection.payoffDate}
-                        </Text>
+              {activeDebts.map((debt, i) => {
+                const progress =
+                  debt.originalBalance > 0
+                    ? (debt.originalBalance - debt.currentBalance) / debt.originalBalance
+                    : 0;
+                const projection = debtAggregates.projections[i];
+                return (
+                  <Link
+                    key={debt.id}
+                    href={{
+                      pathname: "/debt-planner",
+                      params: { debtId: debt.id },
+                    }}
+                    asChild
+                  >
+                    <Pressable
+                      style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}
+                    >
+                      <View
+                        style={[
+                          s.debtMiniCard,
+                          i === 0 && { marginLeft: spacing.md },
+                          debt.isPrimary && s.debtMiniPrimary,
+                        ]}
+                      >
+                        <View style={s.debtMiniStripe} />
+                        <View style={s.debtMiniContent}>
+                          <Text style={s.debtMiniName}>
+                            {debt.name.toUpperCase()}
+                          </Text>
+                          <Text selectable style={s.debtMiniBalance}>
+                            {formatKes(debt.currentBalance)}
+                          </Text>
+                          <View style={{ marginVertical: 8 }}>
+                            <ProgressBar
+                              progress={progress}
+                              height={4}
+                              color={colors.debtRed}
+                            />
+                          </View>
+                          <View style={s.debtMiniBottom}>
+                            <View style={s.debtMiniApr}>
+                              <Text style={s.debtMiniAprText}>
+                                {Math.round(debt.apr * 100)}% APR
+                              </Text>
+                            </View>
+                            <Text style={s.debtMiniPayoff}>
+                              {projection.payoffDate === "Never"
+                                ? "Never"
+                                : `Free ${projection.payoffDate}`}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
-            </Link>
+                    </Pressable>
+                  </Link>
+                );
+              })}
+              <View style={{ width: spacing.md }} />
+            </ScrollView>
           </View>
         )}
 
@@ -821,17 +863,57 @@ const mkStyles = (c: ThemeColors) =>
       letterSpacing: 0.4,
     },
 
-    /* Debt */
-    debtCard: {
+    /* Debt — aggregate stats */
+    debtStatsRow: {
+      flexDirection: "row",
+      gap: 8,
       marginHorizontal: spacing.md,
+      marginBottom: 12,
+    },
+    debtStatBox: {
+      flex: 1,
       backgroundColor: c.bgCard,
       borderWidth: 1,
-      borderColor: "rgba(249,112,72,0.12)",
-      borderRadius: radii.lg,
-      overflow: "hidden",
+      borderColor: c.border,
+      borderRadius: radii.sm,
       borderCurve: "continuous",
+      padding: 12,
+      alignItems: "center",
     },
-    debtLeftStripe: {
+    debtStatLabel: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: c.t3,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 4,
+    },
+    debtStatValue: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: c.t1,
+      fontVariant: ["tabular-nums"],
+    },
+
+    /* Debt — mini cards */
+    debtScroll: {
+      marginBottom: 4,
+    },
+    debtMiniCard: {
+      width: 200,
+      backgroundColor: c.bgCard,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radii.md,
+      borderCurve: "continuous",
+      overflow: "hidden",
+      marginLeft: 8,
+    },
+    debtMiniPrimary: {
+      borderColor: "rgba(249,112,72,0.25)",
+      borderWidth: 1.5,
+    },
+    debtMiniStripe: {
       position: "absolute",
       left: 0,
       top: 0,
@@ -839,73 +921,46 @@ const mkStyles = (c: ThemeColors) =>
       width: 3,
       backgroundColor: c.debtRed,
     },
-    debtContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: 18,
-      paddingLeft: 18 + 3,
-      gap: 14,
+    debtMiniContent: {
+      padding: 14,
+      paddingLeft: 14 + 3,
     },
-    debtRing: {
-      width: 68,
-      height: 68,
-      borderRadius: 34,
-      borderWidth: 4.5,
-      borderColor: c.debtRed,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    debtRingPercent: {
-      fontSize: 14,
-      fontWeight: "700",
-      color: c.t1,
-      fontVariant: ["tabular-nums"],
-    },
-    debtRingLabel: {
-      fontSize: 8.5,
-      fontWeight: "500",
-      color: c.t3,
-      textTransform: "uppercase",
-    },
-    debtBody: {
-      flex: 1,
-    },
-    debtEyebrow: {
-      fontSize: 10.5,
+    debtMiniName: {
+      fontSize: 11,
       fontWeight: "600",
       color: c.t3,
       textTransform: "uppercase",
       letterSpacing: 0.7,
       marginBottom: 4,
     },
-    debtBalance: {
-      fontSize: 24,
+    debtMiniBalance: {
+      fontSize: 20,
       fontWeight: "700",
       color: c.debtRed,
-      letterSpacing: -0.9,
-      marginBottom: 4,
+      letterSpacing: -0.5,
       fontVariant: ["tabular-nums"],
     },
-    debtSub: {
-      fontSize: 11.5,
-      fontWeight: "400",
-      color: c.t3,
-      marginBottom: 8,
+    debtMiniBottom: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
-    debtPayoffTag: {
-      backgroundColor: "rgba(249,112,72,0.09)",
-      borderWidth: 1,
-      borderColor: "rgba(249,112,72,0.18)",
-      paddingHorizontal: 9,
-      paddingVertical: 3,
-      borderRadius: 7,
-      alignSelf: "flex-start",
+    debtMiniApr: {
+      backgroundColor: c.debtRedDim,
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderRadius: 8,
       borderCurve: "continuous",
     },
-    debtPayoffText: {
-      fontSize: 11,
+    debtMiniAprText: {
+      fontSize: 10,
       fontWeight: "700",
       color: c.debtRed,
+    },
+    debtMiniPayoff: {
+      fontSize: 10,
+      fontWeight: "500",
+      color: c.t3,
     },
 
     /* Past Months */

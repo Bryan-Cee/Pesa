@@ -24,6 +24,7 @@ import {
   getGoalStatusColor,
   getGoalStatusLabel,
 } from '../utils/goalCalculator';
+import { TabIcon } from '../components/TabIcon';
 import { differenceInMonths } from 'date-fns';
 
 export function SavingsGoals() {
@@ -142,20 +143,6 @@ export function SavingsGoals() {
   return (
     <View style={s.screen}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={s.header}>
-          <Pressable onPress={() => router.back()} style={s.backBtn}>
-            <Text style={s.backArrow}>{'\u2039'}</Text>
-          </Pressable>
-          <Text style={s.headerTitle}>Savings Goals</Text>
-          <Pressable
-            onPress={() => setShowCreate(true)}
-            style={s.addIconBtn}
-          >
-            <Text style={s.addIconText}>+</Text>
-          </Pressable>
-        </View>
-
         {/* Summary bar */}
         <View style={s.summaryBar}>
           <View style={s.summaryCol}>
@@ -297,13 +284,15 @@ export function SavingsGoals() {
           );
         })}
 
-        {/* Add text button */}
-        <Pressable
-          style={s.addTextBtn}
-          onPress={() => setShowCreate(true)}
-        >
-          <Text style={s.addTextBtnText}>+ Add a new goal</Text>
-        </Pressable>
+        {/* Add button */}
+        <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.sm }}>
+          <Pressable
+            style={s.addTextBtn}
+            onPress={() => setShowCreate(true)}
+          >
+            <Text style={s.addTextBtnText}>+ Add a new goal</Text>
+          </Pressable>
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -326,7 +315,7 @@ export function SavingsGoals() {
             <View style={s.modalHeader}>
               <Text style={s.modalTitle}>New Savings Goal</Text>
               <Pressable style={s.modalCloseBtn} onPress={() => setShowCreate(false)}>
-                <Text style={s.modalCloseBtnText}>Done</Text>
+                <TabIcon name="x" color={colors.t2} size={20} />
               </Pressable>
             </View>
 
@@ -466,47 +455,6 @@ export function SavingsGoals() {
 const mkStyles = (c: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
 
-  /* Header */
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  backArrow: {
-    fontSize: 28,
-    color: c.t1,
-    marginTop: -2,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: '700',
-    color: c.t1,
-  },
-  addIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.xs,
-    backgroundColor: c.coral,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addIconText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: c.t1,
-    marginTop: -1,
-  },
-
   /* Summary bar */
   summaryBar: {
     flexDirection: 'row',
@@ -640,10 +588,15 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.t3,
   },
 
-  /* Add text button */
+  /* Add button */
   addTextBtn: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: c.border,
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+    backgroundColor: 'transparent',
   },
   addTextBtnText: {
     fontSize: 14,
@@ -693,16 +646,14 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.t1,
   },
   modalCloseBtn: {
-    backgroundColor: c.coralDim,
-    borderRadius: radii.button,
-    borderCurve: 'continuous',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  modalCloseBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: c.coral,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalField: { marginBottom: 16 },
   modalLabel: {

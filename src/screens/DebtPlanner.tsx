@@ -14,6 +14,7 @@ import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useDebtStore } from '../stores/debtStore';
+import { useBudgetStore } from '../stores/budgetStore';
 import { Card } from '../components/Card';
 import { TabIcon } from '../components/TabIcon';
 import { formatKes } from '../utils/formatters';
@@ -29,6 +30,9 @@ export function DebtPlanner() {
   const debts = useDebtStore((s) => s.debts);
   const allPayments = useDebtStore((s) => s.payments);
   const updateDebt = useDebtStore((s) => s.updateDebt);
+  const deleteDebt = useDebtStore((s) => s.deleteDebt);
+
+  const deleteCategory = useBudgetStore((s) => s.deleteCategory);
 
   const colors = useColors();
   const s = mkStyles(colors);
@@ -46,6 +50,16 @@ export function DebtPlanner() {
   const [editBalance, setEditBalance] = useState('');
   const [editApr, setEditApr] = useState('');
   const [editPayment, setEditPayment] = useState('');
+
+  const payments = useMemo(
+    () =>
+      debt
+        ? allPayments
+            .filter((p) => p.debtId === debt.id)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        : [],
+    [allPayments, debt?.id]
+  );
 
   if (!debt) {
     return (
@@ -75,14 +89,6 @@ export function DebtPlanner() {
 
   const percentPaid =
     ((debt.originalBalance - debt.currentBalance) / debt.originalBalance) * 100;
-
-  const payments = useMemo(
-    () =>
-      allPayments
-        .filter((p) => p.debtId === debt.id)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    [allPayments, debt.id]
-  );
 
   const ringColor =
     percentPaid >= 75
@@ -326,9 +332,9 @@ export function DebtPlanner() {
           {/* Quick amount chips */}
           <View style={s.chipRow}>
             {[minPayment, Math.floor((minPayment + maxPayment) / 2), maxPayment].map(
-              (v) => (
+              (v, i) => (
                 <Pressable
-                  key={v}
+                  key={i}
                   style={[
                     s.chip,
                     sliderValue === v && s.chipActive,
@@ -455,6 +461,34 @@ export function DebtPlanner() {
             <Text style={s.logPaymentText}>Log Payment</Text>
           </Pressable>
         </View>
+
+        {/* Delete */}
+        <Pressable
+          style={s.deleteBtn}
+          onPress={() =>
+            Alert.alert(
+              'Delete Debt',
+              `Remove "${debt.name}" and all its data? This cannot be undone.`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: () => {
+                    if (debt.linkedCategoryId) {
+                      deleteCategory(debt.linkedCategoryId);
+                    }
+                    deleteDebt(debt.id);
+                    router.back();
+                  },
+                },
+              ]
+            )
+          }
+        >
+          <TabIcon name="trash-2" color={colors.red} size={16} />
+          <Text style={s.deleteBtnText}>Delete Debt</Text>
+        </Pressable>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -890,4 +924,24 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderBottomColor: c.border,
   },
   logPaymentText: { fontSize: 15, fontWeight: '600', color: c.coral },
+
+  /* Delete */
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.lg,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.2)',
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+  },
+  deleteBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: c.red,
+  },
 });

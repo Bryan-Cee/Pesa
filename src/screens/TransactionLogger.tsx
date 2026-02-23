@@ -22,8 +22,9 @@ import { useBudgetStore } from '../stores/budgetStore';
 import { useTransactionStore, TransactionType } from '../stores/transactionStore';
 import { useReminderStore } from '../stores/reminderStore';
 import { parseSms } from '../utils/smsParser';
-import { formatKes } from '../utils/formatters';
+import { formatKes, getMonthLabel } from '../utils/formatters';
 import { CATEGORY_GROUP_META, CATEGORY_GROUP_ORDER } from '../utils/constants';
+import { TabIcon } from '../components/TabIcon';
 
 type Tab = 'sms' | 'manual' | 'future';
 
@@ -34,34 +35,65 @@ export function TransactionLogger() {
     description?: string;
     tab?: Tab;
     monthId?: string;
+    transactionId?: string;
   }>();
   const colors = useColors();
   const isDark = useIsDark();
   const s = mkStyles(colors);
-  const [tab, setTab] = useState<Tab>(params.tab ?? (params.categoryId ? 'manual' : 'sms'));
+
+  // Store selectors — must come before useState so edit-mode derivations are available
+  const months = useBudgetStore((s) => s.months);
+  const addMonth = useBudgetStore((s) => s.addMonth);
+  const allCategories = useBudgetStore((s) => s.categories);
+  const transactions = useTransactionStore((s) => s.transactions);
+  const addTransaction = useTransactionStore((s) => s.addTransaction);
+  const updateTransaction = useTransactionStore((s) => s.updateTransaction);
+  const reminders = useReminderStore((s) => s.reminders);
+  const addReminder = useReminderStore((s) => s.addReminder);
+  const updateReminder = useReminderStore((s) => s.updateReminder);
+  const deleteReminder = useReminderStore((s) => s.deleteReminder);
+
+  // Edit mode: look up existing transaction and its linked reminder
+  const existingTx = params.transactionId
+    ? transactions.find((t) => t.id === params.transactionId) ?? null
+    : null;
+  const isEditing = !!existingTx;
+  const existingReminder = existingTx
+    ? reminders.find((r) => r.linkedType === 'TRANSACTION' && r.linkedId === existingTx.id)
+      ?? (existingTx.reminderId ? reminders.find((r) => r.id === existingTx.reminderId) : null)
+      ?? null
+    : null;
+
+  const [tab, setTab] = useState<Tab>(
+    existingTx
+      ? (existingTx.type === 'ACTUAL' ? 'manual' : 'future')
+      : params.tab ?? (params.categoryId ? 'manual' : 'sms')
+  );
   const [toast, setToast] = useState('');
 
   // SMS tab state
   const [smsText, setSmsText] = useState('');
   const [parsed, setParsed] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState(params.description ?? '');
-  const [note, setNote] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState(params.categoryId ?? '');
+  const [amount, setAmount] = useState(existingTx ? String(existingTx.amount) : '');
+  const [description, setDescription] = useState(existingTx?.description ?? params.description ?? '');
+  const [note, setNote] = useState(existingTx?.note ?? '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(existingTx?.categoryId ?? params.categoryId ?? '');
   const [rawSms, setRawSms] = useState('');
   const [parsedReference, setParsedReference] = useState('');
   const [parsedDate, setParsedDate] = useState('');
   const [parsedMerchant, setParsedMerchant] = useState('');
 
   // Future tab state
-  const [futureStatus, setFutureStatus] = useState<'paid' | 'unpaid'>('unpaid');
+  const [futureStatus, setFutureStatus] = useState<'paid' | 'unpaid'>(
+    existingTx?.type === 'FUTURE_PAID' ? 'paid' : 'unpaid'
+  );
   const [paymentDate, setPaymentDate] = useState<Date | null>(null);
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
   const [eventDate, setEventDate] = useState<Date | null>(null);
   const [showEventPicker, setShowEventPicker] = useState(false);
 
   // Reminder toggle
-  const [reminderOn, setReminderOn] = useState(false);
+  const [reminderOn, setReminderOn] = useState(!!existingReminder);
 
   // Focus tracking
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -69,10 +101,24 @@ export function TransactionLogger() {
   // Category chips: show first 5 groups, then "+ More"
   const [showAllGroups, setShowAllGroups] = useState(false);
 
-  const months = useBudgetStore((s) => s.months);
-  const allCategories = useBudgetStore((s) => s.categories);
-  const addTransaction = useTransactionStore((s) => s.addTransaction);
-  const addReminder = useReminderStore((s) => s.addReminder);
+  // Transaction date — defaults to today, drives which budget month is used
+  const [txDate, setTxDate] = useState<Date>(existingTx ? new Date(existingTx.date) : new Date());
+  const [showTxDatePicker, setShowTxDatePicker] = useState(false);
+
+  /** Find or auto-create the budget month for a given date */
+  function resolveMonthForDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const existing = months.find((m) => m.year === year && m.month === month);
+    if (existing) return existing.id;
+    return addMonth({
+      year,
+      month,
+      label: getMonthLabel(year, month),
+      incomeAssumption: 0,
+      isSetupComplete: false,
+    });
+  }
 
   const currentMonth = useMemo(() => {
     // Use the month passed from the Budget/CategoryDetail screen if available
@@ -80,14 +126,17 @@ export function TransactionLogger() {
       const passed = months.find((m) => m.id === params.monthId);
       if (passed) return passed;
     }
-    // Default to the latest month the user has set up — this ensures newly
-    // added categories (which belong to the most recent budget month) are
-    // always visible, even when opening from the Log tab without context.
+    // Resolve month from the selected transaction date
+    const year = txDate.getFullYear();
+    const month = txDate.getMonth() + 1;
+    const dateMatch = months.find((m) => m.year === year && m.month === month);
+    if (dateMatch) return dateMatch;
+    // Fallback to latest month
     const sorted = [...months].sort(
       (a, b) => b.year * 12 + b.month - (a.year * 12 + a.month)
     );
     return sorted[0] ?? null;
-  }, [months, params.monthId]);
+  }, [months, params.monthId, txDate]);
 
   const categories = useMemo(
     () => currentMonth ? allCategories.filter((c) => c.monthId === currentMonth.id) : [],
@@ -102,10 +151,11 @@ export function TransactionLogger() {
     return CATEGORY_GROUP_ORDER.filter((g) => groupSet.has(g));
   }, [categories]);
 
-  // Auto-select group if category was prefilled
+  // Auto-select group if category was prefilled or editing
   const initialGroup = useMemo(() => {
-    if (params.categoryId) {
-      const cat = allCategories.find((c) => c.id === params.categoryId);
+    const catId = existingTx?.categoryId ?? params.categoryId;
+    if (catId) {
+      const cat = allCategories.find((c) => c.id === catId);
       return cat?.group ?? null;
     }
     return null;
@@ -143,70 +193,128 @@ export function TransactionLogger() {
       type = futureStatus === 'paid' ? 'FUTURE_PAID' : 'FUTURE_PENDING';
     }
 
-    const txDate = paymentDate ? paymentDate.toISOString() : new Date().toISOString();
-
-    addTransaction({
-      monthId: currentMonth.id,
-      categoryId: selectedCategoryId,
-      amount: amountNum,
-      description: description || 'Transaction',
-      date: txDate,
-      type,
-      note: note || undefined,
-      rawSms: rawSms || undefined,
-      isPaid: type === 'FUTURE_PAID' ? true : undefined,
-    });
+    // Resolve monthId from the selected date (auto-creates month if needed)
+    const resolvedMonthId = resolveMonthForDate(txDate);
+    const txDateIso = txDate.toISOString();
 
     const catName =
       categories.find((c) => c.id === selectedCategoryId)?.name ?? 'Budget';
 
-    // Create reminder if toggle is on
-    if (reminderOn) {
-      const reminderDate = paymentDate ?? new Date();
-      // Set reminder 1 day before the payment/event date
-      const fireDate = new Date(reminderDate);
+    if (isEditing && existingTx) {
+      // ---- EDIT PATH ----
+      updateTransaction(existingTx.id, {
+        monthId: resolvedMonthId,
+        categoryId: selectedCategoryId,
+        amount: amountNum,
+        description: description || 'Transaction',
+        date: txDateIso,
+        type,
+        note: note || undefined,
+        isPaid: type === 'FUTURE_PAID' ? true : undefined,
+      });
+
+      // Reminder handling
+      const fireDate = new Date(txDate);
       fireDate.setDate(fireDate.getDate() - 1);
-      // If fire date is in the past, set to tomorrow
       if (fireDate <= new Date()) {
         fireDate.setDate(new Date().getDate() + 1);
       }
 
-      addReminder({
-        name: description || catName,
-        type: tab === 'future' ? 'RECURRING' : 'ONE_TIME',
-        linkedType: 'TRANSACTION',
-        amount: amountNum,
+      if (!existingReminder && reminderOn) {
+        // Was OFF → now ON: create new reminder
+        const remId = addReminder({
+          name: description || catName,
+          type: tab === 'future' ? 'RECURRING' : 'ONE_TIME',
+          linkedType: 'TRANSACTION',
+          linkedId: existingTx.id,
+          amount: amountNum,
+          categoryId: selectedCategoryId,
+          recurrencePattern: tab === 'future' ? 'MONTHLY_DATE' : undefined,
+          leadTimeDays: 1,
+          nextFireDate: fireDate.toISOString(),
+          dueDate: txDateIso,
+          message: `Reminder: ${description || catName} - KES ${amountNum.toLocaleString('en-US')}`,
+          status: 'ACTIVE',
+        });
+        updateTransaction(existingTx.id, { reminderId: remId });
+      } else if (existingReminder && !reminderOn) {
+        // Was ON → now OFF: delete reminder
+        deleteReminder(existingReminder.id);
+        updateTransaction(existingTx.id, { reminderId: undefined });
+      } else if (existingReminder && reminderOn) {
+        // Was ON → stays ON: update reminder
+        updateReminder(existingReminder.id, {
+          amount: amountNum,
+          name: description || catName,
+          nextFireDate: fireDate.toISOString(),
+          dueDate: txDateIso,
+          message: `Reminder: ${description || catName} - KES ${amountNum.toLocaleString('en-US')}`,
+          categoryId: selectedCategoryId,
+        });
+      }
+
+      if (process.env.EXPO_OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setToast(`Updated ${catName}`);
+      setTimeout(() => {
+        setToast('');
+        router.back();
+      }, 800);
+    } else {
+      // ---- CREATE PATH ----
+      const txId = addTransaction({
+        monthId: resolvedMonthId,
         categoryId: selectedCategoryId,
-        recurrencePattern: tab === 'future' ? 'MONTHLY_DATE' : undefined,
-        leadTimeDays: 1,
-        nextFireDate: fireDate.toISOString(),
-        dueDate: txDate,
-        message: `Reminder: ${description || catName} - KES ${amountNum.toLocaleString('en-US')}`,
-        status: 'ACTIVE',
+        amount: amountNum,
+        description: description || 'Transaction',
+        date: txDateIso,
+        type,
+        note: note || undefined,
+        rawSms: rawSms || undefined,
+        isPaid: type === 'FUTURE_PAID' ? true : undefined,
       });
-    }
 
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setToast(`Logged to ${catName}`);
-    setTimeout(() => setToast(''), 3000);
+      // Create reminder if toggle is on, and cross-link with the transaction
+      if (reminderOn) {
+        // Set reminder 1 day before the selected date
+        const fireDate = new Date(txDate);
+        fireDate.setDate(fireDate.getDate() - 1);
+        // If fire date is in the past, set to tomorrow
+        if (fireDate <= new Date()) {
+          fireDate.setDate(new Date().getDate() + 1);
+        }
 
-    // Reset form
-    setAmount('');
-    setDescription('');
-    setNote('');
-    setSelectedCategoryId('');
-    setSmsText('');
-    setParsed(false);
-    setRawSms('');
-    setParsedReference('');
-    setParsedDate('');
-    setParsedMerchant('');
-    setSelectedGroup(null);
-    setReminderOn(false);
-    setPaymentDate(null);
-    setEventDate(null);
+        const remId = addReminder({
+          name: description || catName,
+          type: tab === 'future' ? 'RECURRING' : 'ONE_TIME',
+          linkedType: 'TRANSACTION',
+          linkedId: txId,
+          amount: amountNum,
+          categoryId: selectedCategoryId,
+          recurrencePattern: tab === 'future' ? 'MONTHLY_DATE' : undefined,
+          leadTimeDays: 1,
+          nextFireDate: fireDate.toISOString(),
+          dueDate: txDateIso,
+          message: `Reminder: ${description || catName} - KES ${amountNum.toLocaleString('en-US')}`,
+          status: 'ACTIVE',
+        });
+        updateTransaction(txId, { reminderId: remId });
+      }
+
+      if (process.env.EXPO_OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setToast(`Logged to ${catName}`);
+      setTimeout(() => {
+        setToast('');
+        router.dismiss();
+        router.push({
+          pathname: '/category-detail',
+          params: { categoryId: selectedCategoryId, monthId: resolvedMonthId },
+        });
+      }, 800);
+    }
   }
 
   function renderCategoryPicker() {
@@ -255,6 +363,7 @@ export function TransactionLogger() {
 
   // Button label logic
   function getButtonLabel(): string {
+    if (isEditing) return 'Save Changes';
     const prefix = tab === 'future' ? 'Commit' : 'Log';
     const amtStr = amountNum > 0 ? ` ${formatKes(amountNum)}` : ' Transaction';
     const groupLabel = selectedCatGroup?.label;
@@ -267,11 +376,12 @@ export function TransactionLogger() {
     ? availableGroups
     : availableGroups.slice(0, 5);
 
-  const tabs: { key: Tab; emoji: string; label: string }[] = [
+  const allTabs: { key: Tab; emoji: string; label: string }[] = [
     { key: 'sms', emoji: '\uD83D\uDCAC', label: 'SMS Paste' },
     { key: 'manual', emoji: '\u270F\uFE0F', label: 'Manual' },
     { key: 'future', emoji: '\uD83D\uDCC5', label: 'Future' },
   ];
+  const tabs = isEditing ? allTabs.filter((t) => t.key !== 'sms') : allTabs;
 
   return (
     <View style={s.overlay}>
@@ -289,9 +399,9 @@ export function TransactionLogger() {
 
         {/* Header */}
         <View style={s.sheetHeader}>
-          <Text style={s.sheetTitle}>Log Transaction</Text>
+          <Text style={s.sheetTitle}>{isEditing ? 'Edit Transaction' : 'Log Transaction'}</Text>
           <Pressable style={s.closeBtn} onPress={() => router.back()}>
-            <Text style={s.closeBtnText}>Done</Text>
+            <TabIcon name="x" color={colors.t2} size={20} />
           </Pressable>
         </View>
 
@@ -353,8 +463,36 @@ export function TransactionLogger() {
               </Pressable>
             </View>
 
+            {/* Transaction date */}
+            <Text style={s.fieldLabel}>DATE</Text>
+            <Pressable
+              style={s.datePickerBtn}
+              onPress={() => setShowTxDatePicker(true)}
+            >
+              <Text style={s.datePickerValue}>
+                {txDate.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </Text>
+            </Pressable>
+            {showTxDatePicker && (
+              <DateTimePicker
+                value={txDate}
+                mode="date"
+                display="inline"
+                themeVariant={isDark ? 'dark' : 'light'}
+                accentColor={colors.coral}
+                onChange={(_, date) => {
+                  setShowTxDatePicker(false);
+                  if (date) setTxDate(date);
+                }}
+              />
+            )}
+
             {/* Category group chips */}
-            <Text style={s.fieldLabel}>CATEGORY</Text>
+            <Text style={[s.fieldLabel, { marginTop: spacing.md }]}>CATEGORY</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -442,7 +580,7 @@ export function TransactionLogger() {
             {/* Submit button */}
             <Pressable style={s.logButton} onPress={handleLog}>
               <Text style={s.logButtonText}>
-                {'\u2713'} Log Transaction
+                {isEditing ? 'Save Changes' : '\u2713 Log Transaction'}
               </Text>
             </Pressable>
           </View>
@@ -494,8 +632,36 @@ export function TransactionLogger() {
               </View>
             </Animated.View>
 
+            {/* Transaction date */}
+            <Text style={s.fieldLabel}>DATE</Text>
+            <Pressable
+              style={s.datePickerBtn}
+              onPress={() => setShowTxDatePicker(true)}
+            >
+              <Text style={s.datePickerValue}>
+                {txDate.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </Text>
+            </Pressable>
+            {showTxDatePicker && (
+              <DateTimePicker
+                value={txDate}
+                mode="date"
+                display="inline"
+                themeVariant={isDark ? 'dark' : 'light'}
+                accentColor={colors.coral}
+                onChange={(_, date) => {
+                  setShowTxDatePicker(false);
+                  if (date) setTxDate(date);
+                }}
+              />
+            )}
+
             {/* Category group chips */}
-            <Text style={s.fieldLabel}>CATEGORY</Text>
+            <Text style={[s.fieldLabel, { marginTop: spacing.md }]}>CATEGORY</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -653,6 +819,34 @@ export function TransactionLogger() {
               onFocus={() => setFocusedField('desc')}
               onBlur={() => setFocusedField(null)}
             />
+
+            {/* Transaction date */}
+            <Text style={[s.fieldLabel, { marginTop: spacing.md }]}>DATE</Text>
+            <Pressable
+              style={s.datePickerBtn}
+              onPress={() => setShowTxDatePicker(true)}
+            >
+              <Text style={s.datePickerValue}>
+                {txDate.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </Text>
+            </Pressable>
+            {showTxDatePicker && (
+              <DateTimePicker
+                value={txDate}
+                mode="date"
+                display="inline"
+                themeVariant={isDark ? 'dark' : 'light'}
+                accentColor={colors.coral}
+                onChange={(_, date) => {
+                  setShowTxDatePicker(false);
+                  if (date) setTxDate(date);
+                }}
+              />
+            )}
 
             {/* Category group chips */}
             <Text style={[s.fieldLabel, { marginTop: spacing.md }]}>
@@ -884,7 +1078,10 @@ export function TransactionLogger() {
                     accentColor={colors.coral}
                     onChange={(_, date) => {
                       setShowPaymentPicker(false);
-                      if (date) setPaymentDate(date);
+                      if (date) {
+                        setPaymentDate(date);
+                        setTxDate(date);
+                      }
                     }}
                   />
                 )}
@@ -1031,16 +1228,14 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.t1,
   },
   closeBtn: {
-    backgroundColor: c.coralDim,
-    borderRadius: radii.button,
-    borderCurve: 'continuous',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  closeBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: c.coral,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   /* Tabs */
   tabRow: {

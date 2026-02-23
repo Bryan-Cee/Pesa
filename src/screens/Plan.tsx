@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
-import { DebtPlanner } from './DebtPlanner';
+import { DebtList } from './DebtList';
 import { SavingsGoals } from './SavingsGoals';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -43,7 +43,7 @@ export function Plan() {
           </Text>
         </Pressable>
       </View>
-      {tab === 'debt' ? <DebtPlanner /> : <SavingsGoals />}
+      {tab === 'debt' ? <DebtList /> : <SavingsGoals />}
     </View>
   );
 }
@@ -67,30 +67,26 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   tabRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: 'transparent',
-    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: c.border,
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderCurve: 'continuous',
-    backgroundColor: c.bgCard,
-    borderWidth: 1,
-    borderColor: c.border,
+    paddingVertical: 12,
     alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   tabActive: {
-    backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderBottomColor: c.coral,
   },
   tabText: {
     fontSize: 15,
-    fontWeight: '700',
-    color: c.t2,
+    fontWeight: '600',
+    color: c.t3,
   },
   tabTextActive: {
     color: c.coral,
+    fontWeight: '700',
   },
 });

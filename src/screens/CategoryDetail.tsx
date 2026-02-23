@@ -7,17 +7,15 @@ import {
   TextInput,
   Pressable,
   Alert,
-  Modal,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { format } from 'date-fns';
-import { useColors, useIsDark } from '../hooks/useTheme';
+import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useBudgetStore } from '../stores/budgetStore';
-import { useTransactionStore, Transaction } from '../stores/transactionStore';
+import { useTransactionStore } from '../stores/transactionStore';
 import { Card } from '../components/Card';
 import { ProgressBar } from '../components/ProgressBar';
 import { formatKes, formatDateRelative } from '../utils/formatters';
@@ -32,13 +30,11 @@ export function CategoryDetail() {
   const allCategories = useBudgetStore((s) => s.categories);
   const updateCategory = useBudgetStore((s) => s.updateCategory);
   const allTransactions = useTransactionStore((s) => s.transactions);
-  const updateTransaction = useTransactionStore((s) => s.updateTransaction);
   const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
   const markAsPaid = useTransactionStore((s) => s.markAsPaid);
   const allReminders = useReminderStore((s) => s.reminders);
 
   const colors = useColors();
-  const isDark = useIsDark();
   const s = mkStyles(colors);
 
   const category = useMemo(
@@ -91,34 +87,6 @@ export function CategoryDetail() {
   const [editDescription, setEditDescription] = useState('');
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
 
-  // Edit transaction modal state
-  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [editTxAmount, setEditTxAmount] = useState('');
-  const [editTxDescription, setEditTxDescription] = useState('');
-  const [editTxNote, setEditTxNote] = useState('');
-
-  function openEditTx(tx: Transaction) {
-    setEditTxAmount(String(tx.amount));
-    setEditTxDescription(tx.description);
-    setEditTxNote(tx.note ?? '');
-    setEditingTx(tx);
-    setExpandedTxId(null);
-  }
-
-  function saveEditTx() {
-    if (!editingTx) return;
-    const amt = parseInt(editTxAmount, 10);
-    if (!amt || amt <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount.');
-      return;
-    }
-    updateTransaction(editingTx.id, {
-      amount: amt,
-      description: editTxDescription || editingTx.description,
-      note: editTxNote || undefined,
-    });
-    setEditingTx(null);
-  }
 
   if (!category) {
     return (
@@ -337,7 +305,13 @@ export function CategoryDetail() {
                     <View style={s.txActionRow}>
                       <Pressable
                         style={s.txActionBtn}
-                        onPress={() => openEditTx(tx)}
+                        onPress={() => {
+                          setExpandedTxId(null);
+                          router.push({
+                            pathname: '/transaction-logger',
+                            params: { transactionId: tx.id },
+                          });
+                        }}
                       >
                         <TabIcon name="edit-2" color={colors.coral} size={14} />
                         <Text style={[s.txActionText, { color: colors.coral }]}>Edit</Text>
@@ -416,72 +390,6 @@ export function CategoryDetail() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Edit Transaction Modal */}
-      <Modal visible={editingTx !== null} animationType="slide" transparent>
-        <View style={s.modalOverlay}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setEditingTx(null)}>
-            <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
-          </Pressable>
-
-          <View style={s.modalSheet}>
-            <View style={s.modalHandleRow}>
-              <View style={s.modalHandle} />
-            </View>
-            <View style={s.modalHeaderRow}>
-              <Text style={s.modalTitle}>Edit Transaction</Text>
-              <Pressable style={s.modalCloseBtn} onPress={() => setEditingTx(null)}>
-                <Text style={s.modalCloseBtnText}>Cancel</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView style={s.modalContent} keyboardShouldPersistTaps="handled">
-              <View style={s.modalField}>
-                <Text style={s.modalLabel}>AMOUNT</Text>
-                <View style={s.modalAmountRow}>
-                  <Text style={s.modalKes}>KES</Text>
-                  <TextInput
-                    style={s.modalAmountInput}
-                    value={editTxAmount}
-                    onChangeText={setEditTxAmount}
-                    keyboardType="number-pad"
-                    selectionColor={colors.coral}
-                  />
-                </View>
-              </View>
-
-              <View style={s.modalField}>
-                <Text style={s.modalLabel}>DESCRIPTION</Text>
-                <TextInput
-                  style={s.modalTextInput}
-                  value={editTxDescription}
-                  onChangeText={setEditTxDescription}
-                  placeholder="Description"
-                  placeholderTextColor={colors.t3}
-                  selectionColor={colors.coral}
-                />
-              </View>
-
-              <View style={s.modalField}>
-                <Text style={s.modalLabel}>NOTE (OPTIONAL)</Text>
-                <TextInput
-                  style={s.modalTextInput}
-                  value={editTxNote}
-                  onChangeText={setEditTxNote}
-                  placeholder="Add a memo..."
-                  placeholderTextColor={colors.t3}
-                  selectionColor={colors.coral}
-                />
-              </View>
-
-              <Pressable style={s.modalSaveBtn} onPress={saveEditTx}>
-                <Text style={s.modalSaveBtnText}>Save Changes</Text>
-              </Pressable>
-
-              <View style={{ height: 40 }} />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -756,119 +664,4 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   reminderName: { fontSize: 15, fontWeight: '600', color: c.t1 },
   reminderSub: { fontSize: 12, color: c.t3, marginTop: 3 },
 
-  /* Edit Transaction Modal */
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    maxHeight: '88%',
-    backgroundColor: c.bgSheet,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    borderColor: c.borderMed,
-  },
-  modalHandleRow: {
-    alignItems: 'center',
-    paddingTop: 10,
-    paddingBottom: 2,
-  },
-  modalHandle: {
-    width: 36,
-    height: 5,
-    borderRadius: 100,
-    backgroundColor: c.t3,
-    opacity: 0.4,
-  },
-  modalHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md + 4,
-    paddingTop: 8,
-    paddingBottom: spacing.sm,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: c.t1,
-  },
-  modalCloseBtn: {
-    backgroundColor: c.coralDim,
-    borderRadius: radii.button,
-    borderCurve: 'continuous',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  modalCloseBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: c.coral,
-  },
-  modalContent: {
-    paddingHorizontal: spacing.md + 4,
-  },
-  modalField: {
-    marginBottom: 20,
-  },
-  modalLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: c.t3,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 6,
-  },
-  modalAmountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: c.bgCard,
-    borderWidth: 1,
-    borderColor: c.borderMed,
-    borderRadius: radii.sm,
-    borderCurve: 'continuous',
-    paddingHorizontal: 14,
-  },
-  modalKes: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: c.t3,
-    marginRight: 8,
-  },
-  modalAmountInput: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: '700',
-    color: c.t1,
-    paddingVertical: 12,
-    fontVariant: ['tabular-nums'],
-  },
-  modalTextInput: {
-    backgroundColor: c.bgCard,
-    borderWidth: 1,
-    borderColor: c.borderMed,
-    borderRadius: radii.sm,
-    borderCurve: 'continuous',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    fontWeight: '500',
-    color: c.t1,
-  },
-  modalSaveBtn: {
-    backgroundColor: c.coral,
-    paddingVertical: 15,
-    borderRadius: radii.button,
-    borderCurve: 'continuous',
-    alignItems: 'center',
-    boxShadow: '0 4px 8px rgba(46, 204, 113, 0.3)',
-  },
-  modalSaveBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
 });
