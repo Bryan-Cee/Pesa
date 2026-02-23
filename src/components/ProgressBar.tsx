@@ -7,9 +7,10 @@ import { ThemeColors } from '../theme/colors';
 interface ProgressBarProps {
   progress: number; // 0 to 1+
   height?: number;
+  color?: string;
 }
 
-export function ProgressBar({ progress, height }: ProgressBarProps) {
+export function ProgressBar({ progress, height, color }: ProgressBarProps) {
   const colors = useColors();
   const s = mkStyles(colors);
   const clampedProgress = Math.min(Math.max(progress, 0), 1);
@@ -19,7 +20,7 @@ export function ProgressBar({ progress, height }: ProgressBarProps) {
     <View style={s.track}>
       <View style={[s.fillWrapper, { width: `${widthPercent}%` }]}>
         <LinearGradient
-          colors={['#2ECC71', '#4ADE80']}
+          colors={color ? [color, color] : ['#2ECC71', '#4ADE80']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={s.fill}

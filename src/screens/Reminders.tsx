@@ -12,6 +12,7 @@ import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useReminderStore, Reminder } from '../stores/reminderStore';
+import { useTransactionStore } from '../stores/transactionStore';
 import { formatDateRelative, formatKes } from '../utils/formatters';
 import { TabIcon } from '../components/TabIcon';
 import { differenceInDays } from 'date-fns';
@@ -36,6 +37,8 @@ function ReminderItem({
   const colors = useColors();
   const s = mkStyles(colors);
   const deleteReminder = useReminderStore((st) => st.deleteReminder);
+  const transactions = useTransactionStore((st) => st.transactions);
+  const updateTransaction = useTransactionStore((st) => st.updateTransaction);
   const TYPE_COLORS = getTypeColors(colors);
   const dotColor = TYPE_COLORS[reminder.linkedType] ?? colors.t3;
   const daysUntil = differenceInDays(new Date(reminder.nextFireDate), new Date());
@@ -70,7 +73,16 @@ function ReminderItem({
   function handleDelete() {
     Alert.alert('Delete Reminder', 'Remove this reminder permanently?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteReminder(reminder.id) },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteReminder(reminder.id);
+          // Clear reminderId on any linked transaction
+          const linked = transactions.find((t) => t.reminderId === reminder.id);
+          if (linked) updateTransaction(linked.id, { reminderId: undefined });
+        },
+      },
     ]);
   }
 

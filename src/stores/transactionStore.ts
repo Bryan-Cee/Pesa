@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '../utils/formatters';
+import { useReminderStore } from './reminderStore';
 
 export type TransactionType = 'ACTUAL' | 'FUTURE_PAID' | 'FUTURE_PENDING';
 
@@ -68,10 +69,24 @@ export const useTransactionStore = create<TransactionStore>()(
           ),
         })),
 
-      deleteTransaction: (id) =>
+      deleteTransaction: (id) => {
+        const tx = get().transactions.find((t) => t.id === id);
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
-        })),
+        }));
+        // Cascade: delete linked reminder
+        const reminderState = useReminderStore.getState();
+        if (tx?.reminderId) {
+          reminderState.deleteReminder(tx.reminderId);
+        }
+        // Fallback: find reminder by linkedId (covers cases where reminderId wasn't set)
+        const linkedReminder = reminderState.reminders.find(
+          (r) => r.linkedType === 'TRANSACTION' && r.linkedId === id
+        );
+        if (linkedReminder) {
+          reminderState.deleteReminder(linkedReminder.id);
+        }
+      },
 
       markAsPaid: (id) =>
         set((state) => ({
