@@ -14,12 +14,8 @@ import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useBudgetStore } from '../stores/budgetStore';
-import { useDebtStore } from '../stores/debtStore';
-import { useGoalStore } from '../stores/goalStore';
 import {
   DEFAULT_CATEGORIES,
-  DEFAULT_DEBT,
-  DEFAULT_GOALS,
   CATEGORY_GROUP_META,
 } from '../utils/constants';
 import { getMonthLabel, formatKes } from '../utils/formatters';
@@ -42,8 +38,6 @@ export function Onboarding() {
 
   const updateSettings = useSettingsStore((st) => st.updateSettings);
   const { addMonth, addCategories } = useBudgetStore();
-  const addDebt = useDebtStore((st) => st.addDebt);
-  const addGoal = useGoalStore((st) => st.addGoal);
 
   const cadenceOptions: { label: string; value: ReviewCadence }[] = [
     { label: 'Daily', value: 'DAILY' },
@@ -85,22 +79,6 @@ export function Onboarding() {
         isFixed: c.isFixed,
       }))
     );
-
-    addDebt({ ...DEFAULT_DEBT, startDate: now.toISOString() });
-
-    for (const goal of DEFAULT_GOALS) {
-      addGoal({
-        name: goal.name,
-        emoji: goal.emoji,
-        type: goal.type,
-        targetAmount: goal.targetAmount,
-        currentBalance: goal.currentBalance,
-        targetDate: goal.targetDate,
-        recurrence: goal.recurrence,
-        monthlyRequired: 0,
-        isArchived: false,
-      });
-    }
 
     router.replace('/(tabs)');
   }
