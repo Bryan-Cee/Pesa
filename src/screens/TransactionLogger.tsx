@@ -33,6 +33,7 @@ export function TransactionLogger() {
     categoryId?: string;
     description?: string;
     tab?: Tab;
+    monthId?: string;
   }>();
   const colors = useColors();
   const isDark = useIsDark();
@@ -74,16 +75,19 @@ export function TransactionLogger() {
   const addReminder = useReminderStore((s) => s.addReminder);
 
   const currentMonth = useMemo(() => {
-    const now = new Date();
-    const current = months.find(
-      (m) => m.year === now.getFullYear() && m.month === now.getMonth() + 1
-    );
-    if (current) return current;
+    // Use the month passed from the Budget/CategoryDetail screen if available
+    if (params.monthId) {
+      const passed = months.find((m) => m.id === params.monthId);
+      if (passed) return passed;
+    }
+    // Default to the latest month the user has set up — this ensures newly
+    // added categories (which belong to the most recent budget month) are
+    // always visible, even when opening from the Log tab without context.
     const sorted = [...months].sort(
       (a, b) => b.year * 12 + b.month - (a.year * 12 + a.month)
     );
     return sorted[0] ?? null;
-  }, [months]);
+  }, [months, params.monthId]);
 
   const categories = useMemo(
     () => currentMonth ? allCategories.filter((c) => c.monthId === currentMonth.id) : [],
@@ -207,10 +211,13 @@ export function TransactionLogger() {
 
   function renderCategoryPicker() {
     if (!showCategoryPicker) return null;
+    const filtered = selectedGroup
+      ? categories.filter((c) => c.group === selectedGroup)
+      : categories;
     return (
       <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.pickerOverlay}>
         <ScrollView style={s.pickerList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-          {categories.map((cat) => (
+          {filtered.map((cat) => (
             <Pressable
               key={cat.id}
               style={s.pickerItem}

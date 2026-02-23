@@ -27,7 +27,7 @@ import { TabIcon } from '../components/TabIcon';
 
 export function CategoryDetail() {
   const router = useRouter();
-  const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
+  const { categoryId, monthId } = useLocalSearchParams<{ categoryId: string; monthId?: string }>();
 
   const allCategories = useBudgetStore((s) => s.categories);
   const updateCategory = useBudgetStore((s) => s.updateCategory);
@@ -86,6 +86,7 @@ export function CategoryDetail() {
   );
 
   const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
   const [editProjected, setEditProjected] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
@@ -132,6 +133,7 @@ export function CategoryDetail() {
   const meta = CATEGORY_GROUP_META[category.group];
 
   function startEdit() {
+    setEditName(category!.name);
     setEditProjected(String(category!.projected));
     setEditDescription(category!.description);
     setEditing(true);
@@ -139,6 +141,7 @@ export function CategoryDetail() {
 
   function saveEdit() {
     updateCategory(category!.id, {
+      name: editName.trim() || category!.name,
       projected: parseInt(editProjected, 10) || 0,
       description: editDescription,
     });
@@ -204,6 +207,17 @@ export function CategoryDetail() {
         {editing && (
           <Card style={s.editCard} glowBorder>
             <Text style={s.editTitle}>Edit Category</Text>
+            <View style={s.editField}>
+              <Text style={s.editLabel}>NAME</Text>
+              <TextInput
+                style={s.editTextInput}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Category name"
+                placeholderTextColor={colors.t3}
+                selectionColor={colors.coral}
+              />
+            </View>
             <View style={s.editField}>
               <Text style={s.editLabel}>PROJECTED AMOUNT</Text>
               <View style={s.editInputRow}>
@@ -372,6 +386,7 @@ export function CategoryDetail() {
               params: {
                 categoryId: category?.id,
                 description: category?.name,
+                monthId: monthId ?? category?.monthId,
               },
             })}
           >
