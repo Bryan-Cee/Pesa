@@ -1,0 +1,88 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  trigger-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Update app.json version
+        run: |
+          jq --arg v "${{ steps.version.outputs.version }}" \
+            '.expo.version = $v' app.json > tmp.json && mv tmp.json app.json
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app.json
+          git diff --cached --quiet && echo "No changes to commit" || \
+            (git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" && git push origin HEAD:main)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Configure EAS project
+        run: eas init --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Run EAS Build
+        id: eas-build
+        run: |
+          BUILD_OUTPUT=$(eas build --platform android --profile production \
+            --non-interactive --json 2>/dev/null)
+          echo "$BUILD_OUTPUT"
+          BUILD_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl')
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id')
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_BUILD_NO_EXPO_GO_WARNING: true
+
+      - name: Dispatch release event
+        run: |
+          gh api repos/${{ github.repository }}/dispatches \
+            --method POST \
+            -f event_type="eas-build-complete" \
+            -f 'client_payload[buildId]=${{ steps.eas-build.outputs.build_id }}' \
+            -f 'client_payload[platform]=ANDROID' \
+            -f 'client_payload[status]=finished' \
+            -f 'client_payload[buildUrl]=${{ steps.eas-build.outputs.build_url }}' \
+            -f 'client_payload[appVersion]=${{ steps.version.outputs.version }}' \
+            -f 'client_payload[buildProfile]=production'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

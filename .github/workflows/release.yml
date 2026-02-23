@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  repository_dispatch:
+    types: [eas-build-complete]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.event.client_payload.status == 'finished'
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download APK
+        id: download
+        run: |
+          APK_NAME="pesa-v${{ github.event.client_payload.appVersion }}.apk"
+          curl -L -o "$APK_NAME" "${{ github.event.client_payload.buildUrl }}"
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="v${{ github.event.client_payload.appVersion }}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 2 | tail -n 1)
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log --oneline "$PREV_TAG"..HEAD --no-merges | head -20)
+          else
+            COMMITS=$(git log --oneline -10 --no-merges)
+          fi
+
+          cat > release_notes.md << EOF
+          ## Pesa $VERSION
+
+          **Platform:** ${{ github.event.client_payload.platform }}
+          **Build Profile:** ${{ github.event.client_payload.buildProfile }}
+          **Build ID:** \`${{ github.event.client_payload.buildId }}\`
+
+          ### Changes
+          $COMMITS
+          EOF
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "v${{ github.event.client_payload.appVersion }}" \
+            "${{ steps.download.outputs.apk_name }}" \
+            --title "Pesa v${{ github.event.client_payload.appVersion }}" \
+            --notes-file release_notes.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
