@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,7 @@ export function TransactionLogger() {
     tab?: Tab;
     monthId?: string;
     transactionId?: string;
+    sharedText?: string;
   }>();
   const colors = useColors();
   const isDark = useIsDark();
@@ -97,6 +98,26 @@ export function TransactionLogger() {
 
   // Focus tracking
   const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Auto-populate and auto-parse when receiving shared SMS text
+  useEffect(() => {
+    if (params.sharedText && !parsed) {
+      const text = params.sharedText;
+      setSmsText(text);
+      const result = parseSms(text);
+      setAmount(result.amount ? String(result.amount) : '');
+      setDescription(result.description ?? '');
+      setParsedReference(result.reference ?? '');
+      setParsedDate(result.date ?? '');
+      setParsedMerchant(result.description ?? '');
+      setRawSms(text);
+      setParsed(true);
+      if (result.date) {
+        const d = new Date(result.date);
+        if (!isNaN(d.getTime())) setTxDate(d);
+      }
+    }
+  }, []);
 
   // Category chips: show first 5 groups, then "+ More"
   const [showAllGroups, setShowAllGroups] = useState(false);

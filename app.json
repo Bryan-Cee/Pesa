@@ -33,6 +33,19 @@
           "icon": "./assets/icon.png",
           "color": "#1F4E79"
         }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsText": true,
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 0,
+            "NSExtensionActivationSupportsImageWithMaxCount": 0,
+            "NSExtensionActivationSupportsMovieWithMaxCount": 0
+          },
+          "androidIntentFilters": ["text/plain"],
+          "iosShareExtensionName": "Pesa Share"
+        }
       ]
     ]
   }
