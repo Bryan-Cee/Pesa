@@ -74,19 +74,12 @@ export function Budget() {
   const [newCatProjected, setNewCatProjected] = useState('');
 
   const selectedMonth = sortedMonths[monthIndex];
-  if (!selectedMonth) {
-    return (
-      <View style={[s.screen, { paddingTop: insets.top }]}>
-        <Text style={s.empty}>No budget months found.</Text>
-      </View>
-    );
-  }
 
   const categories = useMemo(
-    () => allCategories.filter((c) => c.monthId === selectedMonth.id),
-    [allCategories, selectedMonth.id]
+    () => selectedMonth ? allCategories.filter((c) => c.monthId === selectedMonth.id) : [],
+    [allCategories, selectedMonth?.id]
   );
-  const isLocked = !!selectedMonth.lockedAt;
+  const isLocked = !!selectedMonth?.lockedAt;
 
   const getActualForCategory = useMemo(() => {
     const map: Record<string, number> = {};
@@ -128,6 +121,14 @@ export function Budget() {
     return map;
   }, [categories, searchQuery]);
 
+  if (!selectedMonth) {
+    return (
+      <View style={[s.screen, { paddingTop: insets.top }]}>
+        <Text style={s.empty}>No budget months found.</Text>
+      </View>
+    );
+  }
+
   const totalProjected = categories.reduce((s, c) => s + c.projected, 0);
   const totalActual = categories.reduce(
     (s, c) => s + getActualForCategory(c.id),
@@ -146,7 +147,7 @@ export function Budget() {
       const b = parseInt(match[1].substring(4, 6), 16);
       return `rgba(${r},${g},${b},0.07)`;
     }
-    return 'rgba(255,255,255,0.03)';
+    return colors.subtle;
   }
 
   function toggleGroup(group: string) {
@@ -322,7 +323,7 @@ export function Budget() {
                   let badgeLabel: string;
 
                   if (!hasData) {
-                    badgeBg = 'rgba(255,255,255,0.04)';
+                    badgeBg = colors.subtle;
                     badgeTextColor = colors.t3;
                     badgeLabel = '\u2014';
                   } else if (variance >= 0) {
@@ -779,7 +780,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   miniProgressTrack: {
     height: 3,
     borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: c.subtle,
     marginTop: 8,
     overflow: 'hidden',
   },
@@ -917,7 +918,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   modalSaveBtnText: {
-    color: '#FFFFFF',
+    color: c.buttonText,
     fontSize: 15,
     fontWeight: '700',
   },

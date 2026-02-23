@@ -16,6 +16,13 @@ export const darkColors = {
   coralLight: '#4ADE80',
   coralDim: 'rgba(46,204,113,0.12)',
   coralGlow: 'rgba(46,204,113,0.22)',
+  coralBorder: 'rgba(46,204,113,0.35)',
+  coralShadow: '0 8px 24px rgba(46,204,113,0.3)',
+  buttonText: '#FFFFFF',
+
+  // Subtle overlays (for tracks, inactive chips, faint backgrounds)
+  subtle: 'rgba(255,255,255,0.03)',
+  subtleMed: 'rgba(255,255,255,0.06)',
 
   // Category group accents
   debtRed: '#F97048',
@@ -81,6 +88,13 @@ export const lightColors: typeof darkColors = {
   coralLight: '#22C55E',
   coralDim: 'rgba(22,163,74,0.10)',
   coralGlow: 'rgba(22,163,74,0.15)',
+  coralBorder: 'rgba(22,163,74,0.3)',
+  coralShadow: '0 8px 24px rgba(22,163,74,0.2)',
+  buttonText: '#FFFFFF',
+
+  // Subtle overlays (for tracks, inactive chips, faint backgrounds)
+  subtle: 'rgba(0,0,0,0.03)',
+  subtleMed: 'rgba(0,0,0,0.05)',
 
   // Category group accents
   debtRed: '#E8613D',

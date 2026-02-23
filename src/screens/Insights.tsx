@@ -12,6 +12,7 @@ import { useGoalStore } from '../stores/goalStore';
 import { ProgressBar } from '../components/ProgressBar';
 import { formatKes } from '../utils/formatters';
 import { CATEGORY_GROUP_META } from '../utils/constants';
+import { TabIcon } from '../components/TabIcon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function Insights() {
@@ -167,51 +168,65 @@ export function Insights() {
         <View style={s.chartSection}>
           <Text style={s.chartLabel}>BUDGET VS ACTUAL</Text>
           <View style={s.chartCard}>
-            {chartData.map((d) => {
-              const meta = CATEGORY_GROUP_META[d.group as keyof typeof CATEGORY_GROUP_META];
-              const barWidth = (d.actual / maxBarValue) * 100;
-              const projWidth = (d.projected / maxBarValue) * 100;
-              const variance = d.projected - d.actual;
-              const isOver = variance < 0;
-              return (
-                <View key={d.name} style={s.barRow}>
-                  <Text style={s.barName} numberOfLines={1}>{d.name}</Text>
-                  <View style={s.barTrack}>
-                    {/* Projected ghost */}
-                    <View style={[s.barGhost, { width: `${Math.min(projWidth, 100)}%` }]} />
-                    {/* Actual fill */}
-                    <View style={[s.barFillWrap, { width: `${Math.min(barWidth, 100)}%` }]}>
-                      <LinearGradient
-                        colors={[meta?.color ?? colors.coral, (meta?.color ?? colors.coral) + 'AA']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={s.barFill}
-                      />
+            {chartData.length > 0 ? (
+              <>
+                {chartData.map((d) => {
+                  const meta = CATEGORY_GROUP_META[d.group as keyof typeof CATEGORY_GROUP_META];
+                  const barWidth = (d.actual / maxBarValue) * 100;
+                  const projWidth = (d.projected / maxBarValue) * 100;
+                  const variance = d.projected - d.actual;
+                  const isOver = variance < 0;
+                  return (
+                    <View key={d.name} style={s.barRow}>
+                      <Text style={s.barName} numberOfLines={1}>{d.name}</Text>
+                      <View style={s.barTrack}>
+                        {/* Projected ghost */}
+                        <View style={[s.barGhost, { width: `${Math.min(projWidth, 100)}%` }]} />
+                        {/* Actual fill */}
+                        <View style={[s.barFillWrap, { width: `${Math.min(barWidth, 100)}%` }]}>
+                          <LinearGradient
+                            colors={[meta?.color ?? colors.coral, (meta?.color ?? colors.coral) + 'AA']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={s.barFill}
+                          />
+                        </View>
+                      </View>
+                      <View style={s.barValueWrap}>
+                        {isOver ? (
+                          <Text style={[s.barVariance, { color: colors.red }]}>
+                            {'\u2191'} {formatKes(Math.abs(variance), true)}
+                          </Text>
+                        ) : (
+                          <Text style={s.barValue}>{formatKes(d.actual, true)}</Text>
+                        )}
+                      </View>
                     </View>
+                  );
+                })}
+                {/* Legend */}
+                <View style={s.legend}>
+                  <View style={s.legendItem}>
+                    <View style={[s.legendDash, { backgroundColor: colors.t3 }]} />
+                    <Text style={s.legendText}>Projected</Text>
                   </View>
-                  <View style={s.barValueWrap}>
-                    {isOver ? (
-                      <Text style={[s.barVariance, { color: colors.red }]}>
-                        {'\u2191'} {formatKes(Math.abs(variance), true)}
-                      </Text>
-                    ) : (
-                      <Text style={s.barValue}>{formatKes(d.actual, true)}</Text>
-                    )}
+                  <View style={s.legendItem}>
+                    <View style={[s.legendDash, { backgroundColor: colors.coral }]} />
+                    <Text style={s.legendText}>Actual</Text>
                   </View>
                 </View>
-              );
-            })}
-            {/* Legend */}
-            <View style={s.legend}>
-              <View style={s.legendItem}>
-                <View style={[s.legendDash, { backgroundColor: colors.t3 }]} />
-                <Text style={s.legendText}>Projected</Text>
+              </>
+            ) : (
+              <View style={s.emptyCard}>
+                <View style={s.emptyIcon}>
+                  <TabIcon name="bar-chart-2" color={colors.t3} size={24} />
+                </View>
+                <Text style={s.emptyText}>Log a few transactions to unlock this insight</Text>
+                <Pressable style={s.emptyBtn} onPress={() => router.push('/transaction-logger')}>
+                  <Text style={s.emptyBtnText}>Log Transaction</Text>
+                </Pressable>
               </View>
-              <View style={s.legendItem}>
-                <View style={[s.legendDash, { backgroundColor: colors.coral }]} />
-                <Text style={s.legendText}>Actual</Text>
-              </View>
-            </View>
+            )}
           </View>
         </View>
 
@@ -219,42 +234,54 @@ export function Insights() {
         <View style={s.chartSection}>
           <Text style={s.chartLabel}>6-MONTH TREND</Text>
           <View style={s.chartCard}>
-            <View style={s.trendChart}>
-              {/* Simple bar representation of trend */}
-              <View style={s.trendBars}>
-                {trendData.map((d, i) => {
-                  const h = (d.actual / trendMax) * 80;
-                  return (
-                    <View key={i} style={s.trendBarCol}>
-                      <View style={s.trendBarWrap}>
-                        <View
-                          style={[
-                            s.trendBar,
-                            { height: Math.max(h, 2), backgroundColor: colors.coral },
-                          ]}
-                        />
+            {trendData.some((d) => d.actual > 0) ? (
+              <View style={s.trendChart}>
+                {/* Simple bar representation of trend */}
+                <View style={s.trendBars}>
+                  {trendData.map((d, i) => {
+                    const h = (d.actual / trendMax) * 80;
+                    return (
+                      <View key={i} style={s.trendBarCol}>
+                        <View style={s.trendBarWrap}>
+                          <View
+                            style={[
+                              s.trendBar,
+                              { height: Math.max(h, 2), backgroundColor: colors.coral },
+                            ]}
+                          />
+                        </View>
+                        <Text style={s.trendBarLabel}>{d.label}</Text>
                       </View>
-                      <Text style={s.trendBarLabel}>{d.label}</Text>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
+                </View>
+                {/* Dashed projected line representation */}
+                <View style={s.trendLine}>
+                  {trendData.map((d, i) => {
+                    const pos = (d.projected / trendMax) * 80;
+                    return (
+                      <View
+                        key={i}
+                        style={[
+                          s.trendDot,
+                          { bottom: pos },
+                        ]}
+                      />
+                    );
+                  })}
+                </View>
               </View>
-              {/* Dashed projected line representation */}
-              <View style={s.trendLine}>
-                {trendData.map((d, i) => {
-                  const pos = (d.projected / trendMax) * 80;
-                  return (
-                    <View
-                      key={i}
-                      style={[
-                        s.trendDot,
-                        { bottom: pos },
-                      ]}
-                    />
-                  );
-                })}
+            ) : (
+              <View style={s.emptyCard}>
+                <View style={s.emptyIcon}>
+                  <TabIcon name="trending-up" color={colors.t3} size={24} />
+                </View>
+                <Text style={s.emptyText}>Track spending over multiple months to see trends</Text>
+                <Pressable style={s.emptyBtn} onPress={() => router.push('/transaction-logger')}>
+                  <Text style={s.emptyBtnText}>Log Transaction</Text>
+                </Pressable>
               </View>
-            </View>
+            )}
           </View>
         </View>
 
@@ -262,47 +289,59 @@ export function Insights() {
         <View style={s.chartSection}>
           <Text style={s.chartLabel}>SPENDING BREAKDOWN</Text>
           <View style={s.chartCard}>
-            <View style={s.breakdownRow}>
-              {/* Simple donut representation */}
-              <View style={s.donutWrap}>
-                <View style={s.donut}>
-                  {groupBreakdown.slice(0, 4).map((g, i) => {
+            {groupBreakdown.length > 0 ? (
+              <View style={s.breakdownRow}>
+                {/* Simple donut representation */}
+                <View style={s.donutWrap}>
+                  <View style={s.donut}>
+                    {groupBreakdown.slice(0, 4).map((g, i) => {
+                      const meta = CATEGORY_GROUP_META[g.group as keyof typeof CATEGORY_GROUP_META];
+                      const size = 12 + g.percent * 0.3;
+                      return (
+                        <View
+                          key={g.group}
+                          style={[
+                            s.donutSegment,
+                            {
+                              backgroundColor: meta?.color,
+                              width: size,
+                              height: size,
+                              borderRadius: size / 2,
+                              position: 'absolute',
+                              top: 20 + i * 12,
+                              left: 20 + (i % 2) * 20,
+                            },
+                          ]}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+                {/* Legend */}
+                <View style={s.breakdownLegend}>
+                  {groupBreakdown.map((g) => {
                     const meta = CATEGORY_GROUP_META[g.group as keyof typeof CATEGORY_GROUP_META];
-                    const size = 12 + g.percent * 0.3;
                     return (
-                      <View
-                        key={g.group}
-                        style={[
-                          s.donutSegment,
-                          {
-                            backgroundColor: meta?.color,
-                            width: size,
-                            height: size,
-                            borderRadius: size / 2,
-                            position: 'absolute',
-                            top: 20 + i * 12,
-                            left: 20 + (i % 2) * 20,
-                          },
-                        ]}
-                      />
+                      <View key={g.group} style={s.breakdownItem}>
+                        <View style={[s.breakdownDot, { backgroundColor: meta?.color }]} />
+                        <Text style={s.breakdownName}>{meta?.label ?? g.group}</Text>
+                        <Text style={s.breakdownPct}>{g.percent}%</Text>
+                      </View>
                     );
                   })}
                 </View>
               </View>
-              {/* Legend */}
-              <View style={s.breakdownLegend}>
-                {groupBreakdown.map((g) => {
-                  const meta = CATEGORY_GROUP_META[g.group as keyof typeof CATEGORY_GROUP_META];
-                  return (
-                    <View key={g.group} style={s.breakdownItem}>
-                      <View style={[s.breakdownDot, { backgroundColor: meta?.color }]} />
-                      <Text style={s.breakdownName}>{meta?.label ?? g.group}</Text>
-                      <Text style={s.breakdownPct}>{g.percent}%</Text>
-                    </View>
-                  );
-                })}
+            ) : (
+              <View style={s.emptyCard}>
+                <View style={s.emptyIcon}>
+                  <TabIcon name="pie-chart" color={colors.t3} size={24} />
+                </View>
+                <Text style={s.emptyText}>Log a few transactions to see where your money goes</Text>
+                <Pressable style={s.emptyBtn} onPress={() => router.push('/transaction-logger')}>
+                  <Text style={s.emptyBtnText}>Log Transaction</Text>
+                </Pressable>
               </View>
-            </View>
+            )}
           </View>
         </View>
 
@@ -384,7 +423,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   barTrack: {
     flex: 1,
     height: 14,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: c.subtle,
     borderRadius: radii.pill,
     borderCurve: 'continuous',
     marginHorizontal: 8,
@@ -394,7 +433,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   barGhost: {
     position: 'absolute',
     height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: c.subtleMed,
     borderRadius: radii.pill,
   },
   barFillWrap: {
@@ -474,4 +513,43 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   breakdownDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   breakdownName: { flex: 1, fontSize: 12, color: c.t2, fontWeight: '500' },
   breakdownPct: { fontSize: 13, fontWeight: '700', color: c.t1, fontVariant: ['tabular-nums'] as const },
+
+  /* Empty state */
+  emptyCard: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+  },
+  emptyIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: c.bgRaised,
+    borderWidth: 1,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    borderCurve: 'continuous',
+  },
+  emptyText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: c.t3,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  emptyBtn: {
+    backgroundColor: c.coral,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: radii.button,
+    borderCurve: 'continuous',
+  },
+  emptyBtnText: {
+    color: c.buttonText,
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });

@@ -643,7 +643,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   miniProgressTrack: {
     height: 3,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: c.subtleMed,
     borderRadius: 100,
     marginTop: 8,
   },
@@ -701,7 +701,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radii.button,
   },
-  saveBtnText: { color: c.t1, fontWeight: '700', fontSize: 15 },
+  saveBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
 
   /* Simulator */
   simulatorSection: {
@@ -761,7 +761,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   sliderTrack: {
     height: 6,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: c.subtleMed,
     borderRadius: 100,
     position: 'relative',
     justifyContent: 'center',
@@ -784,7 +784,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.bgCard,
     top: -6,
     marginLeft: -9,
-    boxShadow: '0 0 6px rgba(46, 204, 113, 0.4)',
+    boxShadow: c.coralShadow,
     borderCurve: 'continuous',
   },
   sliderLabels: {
@@ -815,7 +815,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   chipActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   chipText: {
     fontSize: 12,
@@ -859,7 +859,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     opacity: 0.4,
   },
   applyBtnText: {
-    color: c.t1,
+    color: c.buttonText,
     fontWeight: '700',
     fontSize: 15,
   },

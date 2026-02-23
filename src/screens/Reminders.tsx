@@ -113,7 +113,7 @@ function ReminderItem({
             <Text style={[s.txBadgeText, { color: colors.coral }]}>{timeText}</Text>
           </View>
         ) : reminder.status === 'SNOOZED' ? (
-          <View style={[s.txBadge, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+          <View style={[s.txBadge, { backgroundColor: colors.subtleMed }]}>
             <Text style={[s.txBadgeText, { color: colors.t2 }]}>SNOOZED</Text>
           </View>
         ) : (

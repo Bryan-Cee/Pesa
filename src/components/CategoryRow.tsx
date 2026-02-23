@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { colors } from '../theme/colors';
+import { useColors } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { CATEGORY_GROUP_META, CategoryGroupType } from '../utils/constants';
 import { formatKes } from '../utils/formatters';
@@ -26,6 +27,8 @@ export function CategoryRow({
   onPress,
   onLongPress,
 }: CategoryRowProps) {
+  const colors = useColors();
+  const s = mkStyles(colors);
   const variance = projected - actual;
   const meta = CATEGORY_GROUP_META[group];
   const isOver = actual > projected && projected > 0;
@@ -36,7 +39,7 @@ export function CategoryRow({
   let badgeLabel: string;
 
   if (!hasData) {
-    badgeBg = 'rgba(255,255,255,0.04)';
+    badgeBg = colors.subtle;
     badgeTextColor = colors.t3;
     badgeLabel = '\u2014';
   } else if (variance >= 0) {
@@ -51,39 +54,39 @@ export function CategoryRow({
 
   return (
     <Pressable
-      style={styles.row}
+      style={s.row}
       onPress={onPress}
       onLongPress={onLongPress}
     >
       {/* Left accent stripe */}
-      <View style={[styles.stripe, { backgroundColor: meta.color }]} />
+      <View style={[s.stripe, { backgroundColor: meta.color }]} />
 
-      <View style={styles.content}>
-        <View style={styles.left}>
-          <Text style={styles.name} numberOfLines={1}>{name}</Text>
+      <View style={s.content}>
+        <View style={s.left}>
+          <Text style={s.name} numberOfLines={1}>{name}</Text>
           {description ? (
-            <Text style={styles.description} numberOfLines={1}>{description}</Text>
+            <Text style={s.description} numberOfLines={1}>{description}</Text>
           ) : null}
         </View>
-        <View style={styles.right}>
-          <Text style={[styles.actual, isOver ? { color: colors.red } : undefined]}>
+        <View style={s.right}>
+          <Text style={[s.actual, isOver ? { color: colors.red } : undefined]}>
             {formatKes(actual)}
           </Text>
-          <Text style={styles.projected}>of {formatKes(projected)}</Text>
+          <Text style={s.projected}>of {formatKes(projected)}</Text>
         </View>
-        <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-          <Text style={[styles.badgeText, { color: badgeTextColor }]}>{badgeLabel}</Text>
+        <View style={[s.badge, { backgroundColor: badgeBg }]}>
+          <Text style={[s.badgeText, { color: badgeTextColor }]}>{badgeLabel}</Text>
         </View>
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const mkStyles = (c: ThemeColors) => StyleSheet.create({
   row: {
-    backgroundColor: colors.bgCard,
+    backgroundColor: c.bgCard,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
     position: 'relative',
   },
   stripe: {
@@ -107,12 +110,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 13.5,
     fontWeight: '600',
-    color: colors.t1,
+    color: c.t1,
   },
   description: {
     fontSize: 11,
     fontWeight: '400',
-    color: colors.t3,
+    color: c.t3,
     marginTop: 2,
   },
   right: {
@@ -122,13 +125,13 @@ const styles = StyleSheet.create({
   actual: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.t1,
+    color: c.t1,
     letterSpacing: -0.3,
     fontVariant: ['tabular-nums'],
   },
   projected: {
     fontSize: 10.5,
-    color: colors.t3,
+    color: c.t3,
     marginTop: 1,
     fontVariant: ['tabular-nums'],
   },

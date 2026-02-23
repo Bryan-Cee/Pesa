@@ -23,7 +23,7 @@ export function StatChip({ label, value, color }: StatChipProps) {
 const mkStyles = (c: ThemeColors) => StyleSheet.create({
   chip: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: c.subtle,
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: 8,

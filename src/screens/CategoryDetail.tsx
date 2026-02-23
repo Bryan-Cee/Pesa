@@ -255,7 +255,7 @@ export function CategoryDetail() {
                       </View>
                     )}
                     {tx.type === 'FUTURE_PAID' && (
-                      <View style={[s.txBadge, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+                      <View style={[s.txBadge, { backgroundColor: colors.subtleMed }]}>
                         <Text style={[s.txBadgeText, { color: colors.t2 }]}>Paid</Text>
                       </View>
                     )}
@@ -450,7 +450,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   statBox: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: c.subtle,
     borderWidth: 1,
     borderColor: c.border,
     borderRadius: radii.xs,
@@ -523,7 +523,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radii.button,
   },
-  saveBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  saveBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
   txSection: { marginTop: spacing.sm },
   txHeader: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   txTitle: {

@@ -747,5 +747,5 @@ const mkStyles = (c: ThemeColors) =>
       paddingVertical: 10,
       borderRadius: radii.button,
     },
-    createBtnText: { color: c.t1, fontWeight: '700', fontSize: 15 },
+    createBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
   });

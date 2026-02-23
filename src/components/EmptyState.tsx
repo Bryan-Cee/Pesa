@@ -74,7 +74,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderCurve: 'continuous',
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: c.buttonText,
     fontSize: 15,
     fontWeight: '700',
   },

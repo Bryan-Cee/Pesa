@@ -638,7 +638,7 @@ const mkStyles = (c: ThemeColors) =>
     badgeText: {
       fontSize: 10,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: c.buttonText,
       fontVariant: ['tabular-nums'],
     },
     iconBtnText: {
@@ -664,7 +664,7 @@ const mkStyles = (c: ThemeColors) =>
       width: 220,
       height: 220,
       borderRadius: 110,
-      backgroundColor: "rgba(46,204,113,0.06)",
+      backgroundColor: c.coralDim,
     },
     glowCool: {
       position: "absolute",
@@ -673,7 +673,7 @@ const mkStyles = (c: ThemeColors) =>
       width: 180,
       height: 180,
       borderRadius: 90,
-      backgroundColor: "rgba(46,204,113,0.03)",
+      backgroundColor: c.subtle,
     },
     heroEyebrowRow: {
       flexDirection: "row",

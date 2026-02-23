@@ -193,7 +193,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   filterChipActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   filterText: {
     fontSize: 13,

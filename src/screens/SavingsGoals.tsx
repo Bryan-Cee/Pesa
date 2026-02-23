@@ -502,7 +502,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: c.subtle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -713,5 +713,5 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radii.button,
   },
-  createBtnText: { color: c.t1, fontWeight: '700', fontSize: 15 },
+  createBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
 });

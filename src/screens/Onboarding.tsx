@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
@@ -27,12 +28,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type ReviewCadence = 'DAILY' | 'EVERY_2_DAYS' | 'WEEKLY' | 'BI_WEEKLY' | 'CUSTOM';
 
 export function Onboarding() {
+  const router = useRouter();
   const colors = useColors();
   const s = mkStyles(colors);
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [income, setIncome] = useState('375000');
   const [cadence, setCadence] = useState<ReviewCadence>('WEEKLY');
+  const [reviewDay, setReviewDay] = useState(1); // 1 = Monday
   const [editableCategories, setEditableCategories] = useState(
     DEFAULT_CATEGORIES.map((c) => ({ ...c }))
   );
@@ -59,6 +62,7 @@ export function Onboarding() {
     updateSettings({
       incomeAssumption: incomeAmount,
       reviewCadence: cadence,
+      reviewDayOfWeek: reviewDay % 7, // convert to 0=Sun, 1=Mon, ..., 6=Sat
       hasCompletedOnboarding: true,
     });
 
@@ -97,6 +101,8 @@ export function Onboarding() {
         isArchived: false,
       });
     }
+
+    router.replace('/(tabs)');
   }
 
   function updateCategoryProjected(index: number, value: string) {
@@ -122,9 +128,6 @@ export function Onboarding() {
         <View style={s.welcomeBottom}>
           <Pressable style={s.primaryButton} onPress={() => setStep(1)}>
             <Text style={s.primaryButtonText}>Get Started</Text>
-          </Pressable>
-          <Pressable style={s.skipButton} onPress={() => setStep(3)}>
-            <Text style={s.skipText}>Skip setup</Text>
           </Pressable>
         </View>
       </View>
@@ -194,16 +197,21 @@ export function Onboarding() {
           </View>
           {cadence === 'WEEKLY' && (
             <View style={s.dayRow}>
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                <Pressable
-                  key={day}
-                  style={[s.dayChip, i === 0 && s.dayChipActive]}
-                >
-                  <Text style={[s.dayChipText, i === 0 && s.dayChipTextActive]}>
-                    {day}
-                  </Text>
-                </Pressable>
-              ))}
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
+                const dayValue = i + 1; // 1=Mon, 2=Tue, ..., 7=Sun
+                const isActive = reviewDay === dayValue;
+                return (
+                  <Pressable
+                    key={day}
+                    style={[s.dayChip, isActive && s.dayChipActive]}
+                    onPress={() => setReviewDay(dayValue)}
+                  >
+                    <Text style={[s.dayChipText, isActive && s.dayChipTextActive]}>
+                      {day}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           )}
           <Pressable style={s.primaryButton} onPress={() => setStep(3)}>
@@ -324,15 +332,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: 12,
   },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  skipText: {
-    color: c.t3,
-    fontSize: 14,
-    fontWeight: '500',
-  },
   screen: {
     flex: 1,
     backgroundColor: c.bg,
@@ -399,11 +398,11 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 16,
     borderRadius: radii.button,
     alignItems: 'center',
-    boxShadow: '0 8px 24px rgba(46, 204, 113, 0.3)',
+    boxShadow: c.coralShadow,
     borderCurve: 'continuous',
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: c.buttonText,
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: -0.2,
@@ -425,7 +424,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   pillActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   pillText: {
     fontSize: 14,
@@ -452,7 +451,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   dayChipActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   dayChipText: {
     fontSize: 12,

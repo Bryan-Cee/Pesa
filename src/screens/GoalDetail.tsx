@@ -397,7 +397,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radii.button,
   },
-  saveBtnText: { color: c.t1, fontWeight: '700', fontSize: 15 },
+  saveBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
   section: { marginTop: spacing.sm },
   sectionTitle: {
     fontSize: 17,
@@ -456,7 +456,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.coral,
     alignItems: 'center',
   },
-  addContribText: { color: c.t1, fontSize: 15, fontWeight: '700' },
+  addContribText: { color: c.buttonText, fontSize: 15, fontWeight: '700' },
   deleteBtn: {
     marginHorizontal: spacing.md,
     marginTop: spacing.lg,

@@ -7,7 +7,8 @@ export type IconName =
   | 'edit-2' | 'arrow-left' | 'x' | 'check'
   | 'calendar' | 'message-square' | 'shield'
   | 'download' | 'sun' | 'trash-2' | 'chevron-right'
-  | 'plus' | 'clock' | 'alert-triangle' | 'trending-down';
+  | 'plus' | 'clock' | 'alert-triangle' | 'trending-down'
+  | 'trending-up' | 'pie-chart';
 
 interface TabIconProps {
   name: IconName;

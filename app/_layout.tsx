@@ -1,12 +1,14 @@
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo } from 'react';
 import { useColors, useIsDark } from '../src/hooks/useTheme';
+import { useSettingsStore } from '../src/stores/settingsStore';
 
 export default function RootLayout() {
   const colors = useColors();
   const isDark = useIsDark();
+  const hasCompletedOnboarding = useSettingsStore((s) => s.settings.hasCompletedOnboarding);
 
   const navTheme = useMemo(() => ({
     ...DefaultTheme,
@@ -24,6 +26,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navTheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      {!hasCompletedOnboarding && <Redirect href="/onboarding" />}
       <Stack
         screenOptions={{
           headerShown: false,
@@ -32,6 +35,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" options={{ animation: 'none' }} />
         <Stack.Screen
           name="transaction-logger"
           options={{

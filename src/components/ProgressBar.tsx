@@ -20,7 +20,7 @@ export function ProgressBar({ progress, height, color }: ProgressBarProps) {
     <View style={s.track}>
       <View style={[s.fillWrapper, { width: `${widthPercent}%` }]}>
         <LinearGradient
-          colors={color ? [color, color] : ['#2ECC71', '#4ADE80']}
+          colors={color ? [color, color] : [colors.coral, colors.coralLight]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={s.fill}
@@ -37,7 +37,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   track: {
     height: 5,
     borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: c.subtle,
     width: '100%',
     overflow: 'visible',
   },
@@ -50,7 +50,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 100,
-    boxShadow: '0 0 10px rgba(46, 204, 113, 0.22)',
+    boxShadow: `0 0 10px ${c.coralGlow}`,
   },
   dot: {
     position: 'absolute',
@@ -59,9 +59,9 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 5,
-    backgroundColor: '#4ADE80',
+    backgroundColor: c.coralLight,
     borderWidth: 1.5,
     borderColor: c.bg,
-    boxShadow: '0 0 6px rgba(46, 204, 113, 0.22)',
+    boxShadow: `0 0 6px ${c.coralGlow}`,
   },
 });

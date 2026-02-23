@@ -94,7 +94,7 @@ export function SettingsScreen() {
       <Pressable
         style={[
           s.pill,
-          { backgroundColor: active ? colors.coralDim : 'rgba(255,255,255,0.03)', borderColor: active ? colors.coral + '55' : colors.border },
+          { backgroundColor: active ? colors.coralDim : colors.bgRaised, borderColor: active ? colors.coralBorder : colors.border },
         ]}
         onPress={onPress}
       >
@@ -157,7 +157,7 @@ export function SettingsScreen() {
             value={settings.notificationsEnabled}
             onValueChange={(v) => updateSettings({ notificationsEnabled: v })}
             trackColor={{ true: colors.coral, false: colors.border }}
-            thumbColor="#FFFFFF"
+            thumbColor={colors.white}
           />
         </View>
         <View style={s.divider} />
@@ -196,7 +196,7 @@ export function SettingsScreen() {
             value={settings.overspendAlertsEnabled}
             onValueChange={(v) => updateSettings({ overspendAlertsEnabled: v })}
             trackColor={{ true: colors.coral, false: colors.border }}
-            thumbColor="#FFFFFF"
+            thumbColor={colors.white}
           />
         </View>
       </View>
@@ -382,7 +382,7 @@ const styles = (c: ReturnType<typeof useColors>) =>
     editorKes: { fontSize: 15, marginRight: 6 },
     editorInput: { flex: 1, fontSize: 22, fontWeight: '700', borderBottomWidth: 2, paddingVertical: 4 },
     saveBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center', borderCurve: 'continuous' },
-    saveBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    saveBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
 
     sectionTitle: { fontSize: 11, fontWeight: '600', color: c.t3, letterSpacing: 0.8, paddingHorizontal: 22, marginBottom: 8 },
     sectionCard: {
@@ -409,5 +409,5 @@ const styles = (c: ReturnType<typeof useColors>) =>
     dangerInput: { paddingHorizontal: 14, paddingBottom: 14 },
     resetInput: { borderWidth: 1, borderRadius: radii.xs, padding: 10, fontSize: 15, fontWeight: '700', marginBottom: 10, borderCurve: 'continuous' },
     resetBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center', borderCurve: 'continuous' },
-    resetBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    resetBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
   });

@@ -570,10 +570,10 @@ export function TransactionLogger() {
                 value={reminderOn}
                 onValueChange={setReminderOn}
                 trackColor={{
-                  false: 'rgba(255,255,255,0.08)',
+                  false: colors.border,
                   true: colors.coral,
                 }}
-                thumbColor="#FFFFFF"
+                thumbColor={colors.white}
               />
             </View>
 
@@ -765,10 +765,10 @@ export function TransactionLogger() {
                 value={reminderOn}
                 onValueChange={setReminderOn}
                 trackColor={{
-                  false: 'rgba(255,255,255,0.08)',
+                  false: colors.border,
                   true: colors.coral,
                 }}
-                thumbColor="#FFFFFF"
+                thumbColor={colors.white}
               />
             </View>
 
@@ -959,10 +959,10 @@ export function TransactionLogger() {
                 value={reminderOn}
                 onValueChange={setReminderOn}
                 trackColor={{
-                  false: 'rgba(255,255,255,0.08)',
+                  false: colors.border,
                   true: colors.coral,
                 }}
-                thumbColor="#FFFFFF"
+                thumbColor={colors.white}
               />
             </View>
 
@@ -1158,10 +1158,10 @@ export function TransactionLogger() {
                 value={reminderOn}
                 onValueChange={setReminderOn}
                 trackColor={{
-                  false: 'rgba(255,255,255,0.08)',
+                  false: colors.border,
                   true: colors.coral,
                 }}
-                thumbColor="#FFFFFF"
+                thumbColor={colors.white}
               />
             </View>
 
@@ -1254,7 +1254,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   tabActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   tabText: {
     fontSize: 12.5,
@@ -1309,7 +1309,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     opacity: 0.5,
   },
   parseButtonText: {
-    color: '#FFFFFF',
+    color: c.buttonText,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1349,7 +1349,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   chipActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   chipDot: {
     width: 6,
@@ -1403,11 +1403,11 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.button,
     alignItems: 'center',
     marginTop: spacing.md,
-    boxShadow: '0 4px 8px rgba(46, 204, 113, 0.3)',
+    boxShadow: c.coralShadow,
     borderCurve: 'continuous',
   },
   logButtonText: {
-    color: '#FFFFFF',
+    color: c.buttonText,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -1576,7 +1576,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   futureTileActive: {
     backgroundColor: c.coralDim,
-    borderColor: 'rgba(46,204,113,0.35)',
+    borderColor: c.coralBorder,
   },
   futureTileTitle: {
     fontSize: 13,

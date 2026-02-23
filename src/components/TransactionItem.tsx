@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { colors } from '../theme/colors';
+import { useColors } from '../hooks/useTheme';
+import { ThemeColors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { CATEGORY_GROUP_META, CategoryGroupType } from '../utils/constants';
 import { formatKes } from '../utils/formatters';
@@ -25,27 +26,29 @@ export function TransactionItem({
   note,
   onPress,
 }: TransactionItemProps) {
+  const colors = useColors();
+  const s = mkStyles(colors);
   const groupColor = CATEGORY_GROUP_META[categoryGroup]?.color ?? colors.t3;
 
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      <View style={[styles.dot, { backgroundColor: groupColor }]} />
-      <View style={styles.center}>
-        <Text style={styles.description} numberOfLines={1}>{description}</Text>
-        <Text style={styles.category} numberOfLines={1}>
+    <Pressable style={s.row} onPress={onPress}>
+      <View style={[s.dot, { backgroundColor: groupColor }]} />
+      <View style={s.center}>
+        <Text style={s.description} numberOfLines={1}>{description}</Text>
+        <Text style={s.category} numberOfLines={1}>
           {categoryName}{note ? ` \u00B7 ${note}` : ''}
         </Text>
       </View>
-      <View style={styles.right}>
-        <Text style={styles.amount}>{formatKes(amount)}</Text>
+      <View style={s.right}>
+        <Text style={s.amount}>{formatKes(amount)}</Text>
         {type === 'FUTURE_PENDING' && (
-          <View style={[styles.typeBadge, { backgroundColor: colors.amberDim }]}>
-            <Text style={[styles.typeBadgeText, { color: colors.amber }]}>Upcoming</Text>
+          <View style={[s.typeBadge, { backgroundColor: colors.amberDim }]}>
+            <Text style={[s.typeBadgeText, { color: colors.amber }]}>Upcoming</Text>
           </View>
         )}
         {type === 'FUTURE_PAID' && (
-          <View style={[styles.typeBadge, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
-            <Text style={[styles.typeBadgeText, { color: colors.t2 }]}>Paid</Text>
+          <View style={[s.typeBadge, { backgroundColor: colors.subtleMed }]}>
+            <Text style={[s.typeBadgeText, { color: colors.t2 }]}>Paid</Text>
           </View>
         )}
       </View>
@@ -53,15 +56,15 @@ export function TransactionItem({
   );
 }
 
-const styles = StyleSheet.create({
+const mkStyles = (c: ThemeColors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.bgCard,
+    backgroundColor: c.bgCard,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   dot: {
     width: 8,
@@ -75,12 +78,12 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.t1,
+    color: c.t1,
   },
   category: {
     fontSize: 12,
     fontWeight: '400',
-    color: colors.t3,
+    color: c.t3,
     marginTop: 2,
   },
   right: {
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.t1,
+    color: c.t1,
     fontVariant: ['tabular-nums'],
   },
   typeBadge: {
