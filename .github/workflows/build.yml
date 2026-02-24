@@ -60,7 +60,7 @@ jobs:
         run: |
           # EAS build --json may include non-JSON warnings on stderr
           BUILD_OUTPUT=$(eas build --platform android --profile production \
-            --non-interactive --json 2>/dev/null)
+            --non-interactive --json)
           echo "$BUILD_OUTPUT"
 
           # Parse build artifacts
