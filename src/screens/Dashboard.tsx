@@ -209,10 +209,6 @@ export function Dashboard() {
         <Link href="/(tabs)/budget" asChild>
           <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.97 : 1 })}>
             <View style={s.heroCard}>
-              {/* Warm glow top-right */}
-              <View style={s.glowWarm} />
-              {/* Cool glow bottom-left */}
-              <View style={s.glowCool} />
               {/* Eyebrow */}
               <View style={s.heroEyebrowRow}>
                 <Text style={s.heroEyebrow}>{monthName} BUDGET</Text>
@@ -650,24 +646,6 @@ const mkStyles = (c: ThemeColors) =>
       padding: 22,
       overflow: "hidden",
       borderCurve: "continuous",
-    },
-    glowWarm: {
-      position: "absolute",
-      top: -80,
-      right: -80,
-      width: 220,
-      height: 220,
-      borderRadius: 110,
-      backgroundColor: c.coralDim,
-    },
-    glowCool: {
-      position: "absolute",
-      bottom: -60,
-      left: -60,
-      width: 180,
-      height: 180,
-      borderRadius: 90,
-      backgroundColor: c.subtle,
     },
     heroEyebrowRow: {
       flexDirection: "row",

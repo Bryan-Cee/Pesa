@@ -50,7 +50,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 100,
-    boxShadow: `0 0 10px ${c.coralGlow}`,
   },
   dot: {
     position: 'absolute',
@@ -62,6 +61,5 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.coralLight,
     borderWidth: 1.5,
     borderColor: c.bg,
-    boxShadow: `0 0 6px ${c.coralGlow}`,
   },
 });
