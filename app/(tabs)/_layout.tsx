@@ -43,7 +43,7 @@ export default function TabLayout() {
         options={{
           title: 'Log',
           tabBarIcon: ({ color }) => (
-            <Feather name="plus-circle" size={26} color={color} />
+            <Feather name="edit-3" size={26} color={color} />
           ),
         }}
         listeners={{
@@ -58,7 +58,7 @@ export default function TabLayout() {
         options={{
           title: 'Plan',
           tabBarIcon: ({ color }) => (
-            <Feather name="activity" size={26} color={color} />
+            <Feather name="target" size={26} color={color} />
           ),
         }}
       />

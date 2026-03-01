@@ -344,7 +344,8 @@ export function DebtList() {
               </View>
 
               <View style={s.modalField}>
-                <Text style={s.modalLabel}>Original Balance (KES)</Text>
+                <Text style={s.modalLabel}>Starting Balance (KES)</Text>
+                <Text style={s.modalHelper}>The balance when you started tracking this debt</Text>
                 <TextInput
                   style={s.modalInput}
                   value={newOriginalBalance}
@@ -391,6 +392,28 @@ export function DebtList() {
                 />
               </View>
 
+              <View style={s.toggleRow}>
+                <View style={s.toggleInfo}>
+                  <Text style={s.toggleLabel}>Add to budget?</Text>
+                  <Text style={s.toggleDesc}>
+                    Creates a DEBT REPAYMENT category for{' '}
+                    {debtDate.toLocaleDateString('en-US', {
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                </View>
+                <Switch
+                  value={addToBudget}
+                  onValueChange={setAddToBudget}
+                  trackColor={{
+                    false: colors.border,
+                    true: colors.coralDim,
+                  }}
+                  thumbColor={addToBudget ? colors.coral : colors.t3}
+                />
+              </View>
+
               <View style={s.modalField}>
                 <Text style={s.modalLabel}>Start Date</Text>
                 <Pressable
@@ -418,28 +441,6 @@ export function DebtList() {
                     }}
                   />
                 )}
-              </View>
-
-              <View style={s.toggleRow}>
-                <View style={s.toggleInfo}>
-                  <Text style={s.toggleLabel}>Add to budget?</Text>
-                  <Text style={s.toggleDesc}>
-                    Creates a DEBT REPAYMENT category for{' '}
-                    {debtDate.toLocaleDateString('en-US', {
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </Text>
-                </View>
-                <Switch
-                  value={addToBudget}
-                  onValueChange={setAddToBudget}
-                  trackColor={{
-                    false: colors.border,
-                    true: colors.coralDim,
-                  }}
-                  thumbColor={addToBudget ? colors.coral : colors.t3}
-                />
               </View>
 
               <View style={s.modalActions}>
@@ -478,7 +479,7 @@ const mkStyles = (c: ThemeColors) =>
       alignItems: 'flex-end',
     },
     summaryLabel: {
-      fontSize: 9,
+      fontSize: 11,
       fontWeight: '700',
       color: c.t3,
       letterSpacing: 0.5,
@@ -561,7 +562,7 @@ const mkStyles = (c: ThemeColors) =>
       borderRadius: radii.pill,
     },
     aprBadgeText: {
-      fontSize: 9,
+      fontSize: 11,
       fontWeight: '700',
       letterSpacing: 0.3,
     },
@@ -571,7 +572,7 @@ const mkStyles = (c: ThemeColors) =>
       borderRadius: radii.pill,
     },
     statusBadgeText: {
-      fontSize: 9,
+      fontSize: 11,
       fontWeight: '700',
       letterSpacing: 0.3,
     },
@@ -579,7 +580,7 @@ const mkStyles = (c: ThemeColors) =>
       alignItems: 'flex-end',
     },
     monthlyLabel: {
-      fontSize: 9,
+      fontSize: 11,
       color: c.t3,
       marginBottom: 2,
     },
@@ -682,6 +683,12 @@ const mkStyles = (c: ThemeColors) =>
       justifyContent: 'center',
     },
     modalField: { marginBottom: 16 },
+    modalHelper: {
+      fontSize: 11,
+      color: c.t3,
+      marginBottom: 6,
+      lineHeight: 15,
+    },
     modalLabel: {
       fontSize: 11,
       fontWeight: '600',

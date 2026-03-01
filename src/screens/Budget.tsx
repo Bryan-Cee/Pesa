@@ -266,7 +266,11 @@ export function Budget() {
 
       {/* Main progress bar */}
       <View style={s.progressBarWrap}>
-        <ProgressBar progress={progress} height={4} />
+        <ProgressBar
+          progress={progress}
+          height={4}
+          color={progress > 0.9 ? colors.red : progress > 0.75 ? colors.amber : undefined}
+        />
       </View>
 
       <ScrollView style={s.list} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">

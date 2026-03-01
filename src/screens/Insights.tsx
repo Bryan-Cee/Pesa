@@ -185,7 +185,9 @@ export function Insights() {
                         {/* Actual fill */}
                         <View style={[s.barFillWrap, { width: `${Math.min(barWidth, 100)}%` }]}>
                           <LinearGradient
-                            colors={[meta?.color ?? colors.coral, (meta?.color ?? colors.coral) + 'AA']}
+                            colors={isOver
+                              ? [colors.red, colors.red + 'AA']
+                              : [colors.green, colors.green + 'AA']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={s.barFill}
@@ -296,7 +298,7 @@ export function Insights() {
                   <View style={s.donut}>
                     {groupBreakdown.slice(0, 4).map((g, i) => {
                       const meta = CATEGORY_GROUP_META[g.group as keyof typeof CATEGORY_GROUP_META];
-                      const size = 12 + g.percent * 0.3;
+                      const size = 16 + g.percent * 0.5;
                       return (
                         <View
                           key={g.group}
@@ -308,8 +310,8 @@ export function Insights() {
                               height: size,
                               borderRadius: size / 2,
                               position: 'absolute',
-                              top: 20 + i * 12,
-                              left: 20 + (i % 2) * 20,
+                              top: 28 + i * 18,
+                              left: 28 + (i % 2) * 30,
                             },
                           ]}
                         />
@@ -325,6 +327,7 @@ export function Insights() {
                       <View key={g.group} style={s.breakdownItem}>
                         <View style={[s.breakdownDot, { backgroundColor: meta?.color }]} />
                         <Text style={s.breakdownName}>{meta?.label ?? g.group}</Text>
+                        <Text style={s.breakdownAmount}>{formatKes(g.amount, true)}</Text>
                         <Text style={s.breakdownPct}>{g.percent}%</Text>
                       </View>
                     );
@@ -472,7 +475,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   trendBarCol: { alignItems: 'center', flex: 1 },
   trendBarWrap: { height: 80, justifyContent: 'flex-end' },
-  trendBar: { width: 8, borderRadius: 4 },
+  trendBar: { width: 18, borderRadius: 4 },
   trendBarLabel: { fontSize: 10, color: c.t3, marginTop: 6, fontWeight: '500' },
   trendLine: {
     position: 'absolute',
@@ -493,12 +496,12 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
 
   /* Breakdown */
   breakdownRow: { flexDirection: 'row', alignItems: 'center' },
-  donutWrap: { width: 80, height: 80, marginRight: 16 },
+  donutWrap: { width: 120, height: 120, marginRight: 16 },
   donut: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 8,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 10,
     borderColor: c.debtRed,
     position: 'relative',
     overflow: 'hidden',
@@ -512,6 +515,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   breakdownDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   breakdownName: { flex: 1, fontSize: 12, color: c.t2, fontWeight: '500' },
+  breakdownAmount: { fontSize: 11, color: c.t3, fontWeight: '500', marginRight: 6, fontVariant: ['tabular-nums'] as const },
   breakdownPct: { fontSize: 13, fontWeight: '700', color: c.t1, fontVariant: ['tabular-nums'] as const },
 
   /* Empty state */

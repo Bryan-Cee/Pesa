@@ -14,8 +14,8 @@ export function StatChip({ label, value, color }: StatChipProps) {
   const s = mkStyles(colors);
   return (
     <View style={s.chip}>
-      <Text style={[s.value, { color: color ?? colors.t1 }]}>{value}</Text>
-      <Text style={s.label}>{label}</Text>
+      <Text style={[s.value, { color: color ?? colors.t1 }]} numberOfLines={1}>{value}</Text>
+      <Text style={s.label} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
@@ -41,7 +41,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   label: {
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '500',
     color: c.t3,
     textTransform: 'uppercase',

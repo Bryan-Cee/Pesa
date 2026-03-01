@@ -116,7 +116,7 @@ export function SavingsGoals() {
       case 'ONGOING':
         return 'ONGOING';
       case 'ONE_OFF':
-        return 'ONE-OFF';
+        return 'ONE TIME';
       case 'CUSTOM_MONTHS':
         return 'CUSTOM';
       default:
@@ -227,13 +227,13 @@ export function SavingsGoals() {
                       <View
                         style={[
                           s.statusBadge,
-                          { backgroundColor: colors.amberDim },
+                          { backgroundColor: colors.redDim },
                         ]}
                       >
                         <Text
                           style={[
                             s.statusBadgeText,
-                            { color: colors.amber },
+                            { color: colors.red },
                           ]}
                         >
                           BEHIND
@@ -244,13 +244,13 @@ export function SavingsGoals() {
                       <View
                         style={[
                           s.statusBadge,
-                          { backgroundColor: colors.redDim },
+                          { backgroundColor: colors.amberDim },
                         ]}
                       >
                         <Text
                           style={[
                             s.statusBadgeText,
-                            { color: colors.red },
+                            { color: colors.amber },
                           ]}
                         >
                           AT RISK
@@ -346,11 +346,22 @@ export function SavingsGoals() {
 
             <View style={s.modalField}>
               <Text style={s.modalLabel}>Emoji</Text>
+              <View style={s.emojiPresets}>
+                {['🏠', '🚗', '✈️', '💻', '🎓', '💍', '🏖️', '🎯', '💰', '📱'].map((e) => (
+                  <Pressable
+                    key={e}
+                    style={[s.emojiPresetBtn, newEmoji === e && s.emojiPresetBtnActive]}
+                    onPress={() => setNewEmoji(e)}
+                  >
+                    <Text style={s.emojiPresetText}>{e}</Text>
+                  </Pressable>
+                ))}
+              </View>
               <TextInput
-                style={s.modalInput}
+                style={[s.modalInput, { marginTop: 8 }]}
                 value={newEmoji}
                 onChangeText={setNewEmoji}
-                placeholder="\uD83C\uDFAF"
+                placeholder="Or type a custom emoji"
                 placeholderTextColor={colors.t3}
               />
             </View>
@@ -486,7 +497,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'flex-end',
   },
   summaryLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     color: c.t3,
     letterSpacing: 0.5,
@@ -549,7 +560,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.pill,
   },
   recurrenceBadgeText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
@@ -559,7 +570,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radii.pill,
   },
   statusBadgeText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
@@ -567,7 +578,7 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'flex-end',
   },
   monthlyLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: c.t3,
     marginBottom: 2,
   },
@@ -705,6 +716,30 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.t1,
     paddingVertical: 12,
     paddingHorizontal: 14,
+  },
+  emojiPresets: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 4,
+  },
+  emojiPresetBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    borderCurve: 'continuous',
+    backgroundColor: c.bgCard,
+    borderWidth: 1,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiPresetBtnActive: {
+    borderColor: c.coral,
+    backgroundColor: c.coralDim,
+  },
+  emojiPresetText: {
+    fontSize: 22,
   },
   typePills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typePill: {

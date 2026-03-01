@@ -233,6 +233,7 @@ export function Dashboard() {
                   </View>
                 </View>
                 <View style={s.heroRight}>
+                  <Text style={s.heroRightLabel}>PROJECTED</Text>
                   <Text selectable style={s.heroBudgetAmount}>
                     {totalProjected.toLocaleString("en-US")}
                   </Text>
@@ -241,7 +242,10 @@ export function Dashboard() {
 
               {/* Progress */}
               <View style={s.heroProgressWrap}>
-                <ProgressBar progress={progress} />
+                <ProgressBar
+                  progress={progress}
+                  color={progress > 0.9 ? colors.red : progress > 0.75 ? colors.amber : undefined}
+                />
               </View>
               <View style={s.heroMeta}>
                 <Text style={s.heroMetaLeft}>
@@ -328,16 +332,6 @@ export function Dashboard() {
                         <Text style={s.upcomingDate}>
                           {formatDateRelative(tx.date)}
                         </Text>
-                        <View
-                          style={[
-                            s.upcomingBadge,
-                            { backgroundColor: stripe + "18" },
-                          ]}
-                        >
-                          <Text style={[s.upcomingBadgeText, { color: stripe }]}>
-                            UNPAID
-                          </Text>
-                        </View>
                       </View>
                     </Pressable>
                   </Link>
@@ -374,7 +368,7 @@ export function Dashboard() {
                 </Text>
               </View>
               <View style={s.debtStatBox}>
-                <Text style={s.debtStatLabel}>FIRST FREE</Text>
+                <Text style={s.debtStatLabel}>DEBT FREE</Text>
                 <Text style={[s.debtStatValue, { color: colors.green, fontSize: 13 }]}>
                   {debtAggregates.earliestPayoff}
                 </Text>
@@ -733,6 +727,14 @@ const mkStyles = (c: ThemeColors) =>
       justifyContent: "flex-end",
       paddingBottom: 6,
     },
+    heroRightLabel: {
+      fontSize: 9.5,
+      fontWeight: "500",
+      color: c.t3,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 2,
+    },
     heroBudgetAmount: {
       fontSize: 20,
       fontWeight: "600",
@@ -798,7 +800,7 @@ const mkStyles = (c: ThemeColors) =>
 
     /* Upcoming */
     upcomingCard: {
-      width: 138,
+      width: 152,
       backgroundColor: c.bgCard,
       borderWidth: 1,
       borderColor: c.border,
@@ -1016,7 +1018,7 @@ const mkStyles = (c: ThemeColors) =>
       color: c.t1,
     },
     goalMeta: {
-      fontSize: 10.5,
+      fontSize: 12,
       fontWeight: "400",
       color: c.t3,
       fontVariant: ["tabular-nums"],

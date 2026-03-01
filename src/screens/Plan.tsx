@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions, Animated } from 'react-native';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
@@ -13,6 +13,7 @@ export function Plan() {
   const [tab, setTab] = useState<PlanTab>('debt');
   const { width } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   const colors = useColors();
   const s = mkStyles(colors);
@@ -29,22 +30,30 @@ export function Plan() {
         <Text style={s.title}>Plan</Text>
       </View>
       <View style={s.tabRow}>
-        <Pressable
-          style={[s.tab, tab === 'debt' && s.tabActive]}
-          onPress={() => goToTab('debt')}
-        >
+        <Pressable style={s.tab} onPress={() => goToTab('debt')}>
           <Text style={[s.tabText, tab === 'debt' && s.tabTextActive]}>
             Debt
           </Text>
         </Pressable>
-        <Pressable
-          style={[s.tab, tab === 'goals' && s.tabActive]}
-          onPress={() => goToTab('goals')}
-        >
+        <Pressable style={s.tab} onPress={() => goToTab('goals')}>
           <Text style={[s.tabText, tab === 'goals' && s.tabTextActive]}>
             Goals
           </Text>
         </Pressable>
+        <Animated.View
+          style={[
+            s.tabIndicator,
+            {
+              transform: [{
+                translateX: scrollX.interpolate({
+                  inputRange: [0, width],
+                  outputRange: [0, width / 2],
+                  extrapolate: 'clamp',
+                }),
+              }],
+            },
+          ]}
+        />
       </View>
       <ScrollView
         ref={scrollRef}
@@ -52,6 +61,10 @@ export function Plan() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true }
+        )}
         onMomentumScrollEnd={(e) => {
           const index = Math.round(e.nativeEvent.contentOffset.x / width);
           setTab(index === 0 ? 'debt' : 'goals');
@@ -90,16 +103,21 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: c.border,
+    position: 'relative',
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
   },
-  tabActive: {
-    borderBottomColor: c.coral,
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: spacing.md,
+    height: 2,
+    width: '50%',
+    backgroundColor: c.coral,
+    borderRadius: 1,
   },
   tabText: {
     fontSize: 15,
