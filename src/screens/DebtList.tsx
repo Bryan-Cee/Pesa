@@ -3,14 +3,15 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   TextInput,
   Modal,
   Switch,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { BlurView } from 'expo-blur';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -318,7 +319,7 @@ export function DebtList() {
               </Pressable>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
+            <KeyboardAwareScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={20}>
               <View style={s.modalField}>
                 <Text style={s.modalLabel}>Name</Text>
                 <TextInput
@@ -449,7 +450,7 @@ export function DebtList() {
                   <Text style={s.createBtnText}>Create Debt</Text>
                 </Pressable>
               </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </KeyboardAvoidingView>
         </View>
       </Modal>

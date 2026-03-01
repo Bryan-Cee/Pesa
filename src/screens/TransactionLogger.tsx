@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BlurView } from 'expo-blur';
@@ -448,11 +449,12 @@ export function TransactionLogger() {
         ))}
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={s.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        automaticallyAdjustKeyboardInsets
+        enableOnAndroid
+        extraScrollHeight={20}
       >
         {/* ============ SMS Tab: unparsed ============ */}
         {tab === 'sms' && !parsed && (
@@ -1197,7 +1199,7 @@ export function TransactionLogger() {
         )}
 
         <View style={{ height: 16 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
         {/* Toast */}
         {toast ? (

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -464,7 +465,7 @@ export function Budget() {
                 <Text style={s.modalCloseBtnText}>Cancel</Text>
               </Pressable>
             </View>
-            <ScrollView style={s.modalContent} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+            <KeyboardAwareScrollView style={s.modalContent} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={20}>
               <View style={s.modalField}>
                 <Text style={s.modalLabel}>NAME</Text>
                 <TextInput
@@ -507,7 +508,7 @@ export function Budget() {
                 <Text style={s.modalSaveBtnText}>Save</Text>
               </Pressable>
               <View style={{ height: 40 }} />
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </KeyboardAvoidingView>
         </View>
       </Modal>

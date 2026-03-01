@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { BlurView } from 'expo-blur';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -331,7 +332,7 @@ export function SavingsGoals() {
               </Pressable>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
+            <KeyboardAwareScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" enableOnAndroid extraScrollHeight={20}>
             <View style={s.modalField}>
               <Text style={s.modalLabel}>Name</Text>
               <TextInput
@@ -458,7 +459,7 @@ export function SavingsGoals() {
                 <Text style={s.createBtnText}>Create Goal</Text>
               </Pressable>
             </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </KeyboardAvoidingView>
         </View>
       </Modal>
