@@ -8,6 +8,8 @@ import {
   Pressable,
   Alert,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -412,7 +414,7 @@ export function TransactionLogger() {
       </Pressable>
 
       {/* Sheet */}
-      <View style={s.sheet}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.sheet}>
         {/* Drag handle */}
         <View style={s.handleRow}>
           <View style={s.handle} />
@@ -1203,7 +1205,7 @@ export function TransactionLogger() {
             <Text style={s.toastText}>{'\u2713'} {toast}</Text>
           </Animated.View>
         ) : null}
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

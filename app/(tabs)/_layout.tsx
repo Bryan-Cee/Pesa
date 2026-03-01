@@ -10,8 +10,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#25D366',
         tabBarStyle: {
-          height: 72,
-          paddingBottom: 12,
+          height: 84,
+          paddingBottom: 24,
           paddingTop: 8,
         },
         tabBarLabelStyle: {

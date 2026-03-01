@@ -130,7 +130,7 @@ export function BudgetSetup() {
 
   if (step === 0) {
     return (
-      <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={s.header}>
           <Text style={s.title}>
             Review {getMonthLabel(nextYear, nextMonth)} Budget

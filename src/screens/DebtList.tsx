@@ -8,6 +8,8 @@ import {
   TextInput,
   Modal,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -299,7 +301,7 @@ export function DebtList() {
             />
           </Pressable>
 
-          <View style={[s.modalContent, { paddingBottom: spacing.lg + insets.bottom }]}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[s.modalContent, { paddingBottom: spacing.lg + insets.bottom }]}>
             {/* Drag handle */}
             <View style={s.handleRow}>
               <View style={s.handle} />
@@ -448,7 +450,7 @@ export function DebtList() {
                 </Pressable>
               </View>
             </ScrollView>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>

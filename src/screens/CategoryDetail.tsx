@@ -119,7 +119,7 @@ export function CategoryDetail() {
   }
 
   return (
-    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Header Card */}
         <Card style={s.headerCard} glowBorder>

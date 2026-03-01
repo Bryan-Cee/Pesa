@@ -145,7 +145,7 @@ export function DebtPlanner() {
   const paidSoFar = debt.originalBalance - debt.currentBalance;
 
   return (
-    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={s.header}>

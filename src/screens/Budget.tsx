@@ -8,6 +8,8 @@ import {
   Pressable,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -452,7 +454,7 @@ export function Budget() {
           <Pressable style={StyleSheet.absoluteFill} onPress={closeAddModal}>
             <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
           </Pressable>
-          <View style={s.modalSheet}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalSheet}>
             <View style={s.modalHandleRow}>
               <View style={s.modalHandle} />
             </View>
@@ -507,7 +509,7 @@ export function Budget() {
               <View style={{ height: 40 }} />
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Totals Footer */}
