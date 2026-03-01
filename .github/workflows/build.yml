@@ -51,7 +51,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies and sync lock file
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Commit updated lock file
         run: |
