@@ -508,8 +508,8 @@ export function Budget() {
               </Pressable>
               <View style={{ height: 40 }} />
             </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
 
       {/* Totals Footer */}
