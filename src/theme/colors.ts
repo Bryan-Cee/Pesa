@@ -9,14 +9,14 @@ export const darkColors = {
   // Borders
   border: 'rgba(255,255,255,0.055)',
   borderMed: 'rgba(255,255,255,0.09)',
-  borderFocus: 'rgba(46,204,113,0.45)',
+  borderFocus: 'rgba(20,184,166,0.45)',
 
-  // Primary accent (Money Green)
-  coral: '#2ECC71',
-  coralLight: '#52D98B',
-  coralDim: 'rgba(46,204,113,0.12)',
-  coralGlow: 'rgba(46,204,113,0.18)',
-  coralBorder: 'rgba(46,204,113,0.35)',
+  // Primary accent (Teal)
+  coral: '#14B8A6',
+  coralLight: '#2DD4BF',
+  coralDim: 'rgba(20,184,166,0.12)',
+  coralGlow: 'rgba(20,184,166,0.18)',
+  coralBorder: 'rgba(20,184,166,0.35)',
   coralShadow: 'none',
   buttonText: '#FFFFFF',
 
@@ -28,7 +28,7 @@ export const darkColors = {
   debtRed: '#F97048',
   savingsGreen: '#34D399',
   investBlue: '#60A5FA',
-  householdCoral: '#2ECC71',
+  householdCoral: '#14B8A6',
   vehicleTeal: '#2DD4BF',
   subsPurple: '#A78BFA',
   entertAmber: '#FBBF24',
@@ -41,7 +41,7 @@ export const darkColors = {
   debtRedDim: 'rgba(249,112,72,0.10)',
   savingsGreenDim: 'rgba(52,211,153,0.10)',
   investBlueDim: 'rgba(96,165,250,0.10)',
-  householdCoralDim: 'rgba(46,204,113,0.10)',
+  householdCoralDim: 'rgba(20,184,166,0.10)',
   vehicleTealDim: 'rgba(45,212,191,0.10)',
   subsPurpleDim: 'rgba(167,139,250,0.10)',
   entertAmberDim: 'rgba(251,191,36,0.10)',
@@ -81,14 +81,14 @@ export const lightColors: typeof darkColors = {
   // Borders
   border: 'rgba(0,0,0,0.08)',
   borderMed: 'rgba(0,0,0,0.12)',
-  borderFocus: 'rgba(26,138,69,0.45)',
+  borderFocus: 'rgba(15,118,110,0.45)',
 
-  // Primary accent (Money Green — darkened for light bg)
-  coral: '#1A8A45',
-  coralLight: '#2ECC71',
-  coralDim: 'rgba(26,138,69,0.10)',
-  coralGlow: 'rgba(26,138,69,0.15)',
-  coralBorder: 'rgba(26,138,69,0.3)',
+  // Primary accent (Teal — darkened for light bg)
+  coral: '#0F766E',
+  coralLight: '#14B8A6',
+  coralDim: 'rgba(15,118,110,0.10)',
+  coralGlow: 'rgba(15,118,110,0.15)',
+  coralBorder: 'rgba(15,118,110,0.3)',
   coralShadow: 'none',
   buttonText: '#FFFFFF',
 
@@ -100,7 +100,7 @@ export const lightColors: typeof darkColors = {
   debtRed: '#E8613D',
   savingsGreen: '#1A9A6B',
   investBlue: '#3B82F6',
-  householdCoral: '#1A8A45',
+  householdCoral: '#0F766E',
   vehicleTeal: '#0D9488',
   subsPurple: '#7C3AED',
   entertAmber: '#D97706',
@@ -113,7 +113,7 @@ export const lightColors: typeof darkColors = {
   debtRedDim: 'rgba(232,97,61,0.08)',
   savingsGreenDim: 'rgba(26,154,107,0.08)',
   investBlueDim: 'rgba(59,130,246,0.08)',
-  householdCoralDim: 'rgba(26,138,69,0.08)',
+  householdCoralDim: 'rgba(15,118,110,0.08)',
   vehicleTealDim: 'rgba(13,148,136,0.08)',
   subsPurpleDim: 'rgba(124,58,237,0.08)',
   entertAmberDim: 'rgba(217,119,6,0.08)',
