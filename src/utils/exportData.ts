@@ -32,8 +32,21 @@ export async function exportData(format: ExportFormat): Promise<void> {
   }
 
   if (format === 'csv') {
-    const ws = XLSX.utils.json_to_sheet(transactions.length ? transactions : [{}]);
-    const csv = XLSX.utils.sheet_to_csv(ws);
+    const sections: { name: string; data: object[] }[] = [
+      { name: 'TRANSACTIONS', data: transactions },
+      { name: 'MONTHS', data: months },
+      { name: 'CATEGORIES', data: categories },
+      { name: 'DEBTS', data: debts },
+      { name: 'DEBT_PAYMENTS', data: payments },
+      { name: 'GOALS', data: goals },
+      { name: 'GOAL_CONTRIBUTIONS', data: contributions },
+    ];
+
+    const csv = sections
+      .filter((s) => s.data.length > 0)
+      .map((s) => `# ${s.name}\n${XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(s.data))}`)
+      .join('\n');
+
     const uri = `${FileSystem.cacheDirectory}${filename}.csv`;
     await FileSystem.writeAsStringAsync(uri, csv, {
       encoding: FileSystem.EncodingType.UTF8,
