@@ -284,6 +284,14 @@ export function SavingsGoals() {
           );
         })}
 
+        {/* Empty state */}
+        {activeGoals.length === 0 && (
+          <View style={s.emptyState}>
+            <Text style={s.emptyText}>No goals yet.</Text>
+            <Text style={s.emptySubtext}>Tap below to add your first savings goal.</Text>
+          </View>
+        )}
+
         {/* Add button */}
         <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.sm }}>
           <Pressable
@@ -585,6 +593,23 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   goalTimeLeft: {
     fontSize: 12,
+    color: c.t3,
+  },
+
+  /* Empty state */
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: spacing.lg,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: c.t2,
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
     color: c.t3,
   },
 

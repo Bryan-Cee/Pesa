@@ -8,15 +8,24 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#16A34A',
+        tabBarActiveTintColor: '#25D366',
+        tabBarStyle: {
+          height: 72,
+          paddingBottom: 12,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="home" size={26} color={color} />
           ),
         }}
       />
@@ -24,8 +33,8 @@ export default function TabLayout() {
         name="budget"
         options={{
           title: 'Budget',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="grid" size={26} color={color} />
           ),
         }}
       />
@@ -33,8 +42,8 @@ export default function TabLayout() {
         name="log"
         options={{
           title: 'Log',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="plus-circle" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="plus-circle" size={26} color={color} />
           ),
         }}
         listeners={{
@@ -48,8 +57,8 @@ export default function TabLayout() {
         name="plan"
         options={{
           title: 'Plan',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="activity" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="activity" size={26} color={color} />
           ),
         }}
       />
@@ -57,8 +66,8 @@ export default function TabLayout() {
         name="insights"
         options={{
           title: 'Insights',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="bar-chart-2" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="bar-chart-2" size={26} color={color} />
           ),
         }}
       />

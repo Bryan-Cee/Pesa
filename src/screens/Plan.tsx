@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { useColors } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
@@ -11,10 +11,17 @@ type PlanTab = 'debt' | 'goals';
 
 export function Plan() {
   const [tab, setTab] = useState<PlanTab>('debt');
+  const { width } = useWindowDimensions();
+  const scrollRef = useRef<ScrollView>(null);
 
   const colors = useColors();
   const s = mkStyles(colors);
   const insets = useSafeAreaInsets();
+
+  function goToTab(t: PlanTab) {
+    setTab(t);
+    scrollRef.current?.scrollTo({ x: t === 'debt' ? 0 : width, animated: true });
+  }
 
   return (
     <View style={s.screen}>
@@ -24,26 +31,40 @@ export function Plan() {
       <View style={s.tabRow}>
         <Pressable
           style={[s.tab, tab === 'debt' && s.tabActive]}
-          onPress={() => setTab('debt')}
+          onPress={() => goToTab('debt')}
         >
-          <Text
-            style={[s.tabText, tab === 'debt' && s.tabTextActive]}
-          >
+          <Text style={[s.tabText, tab === 'debt' && s.tabTextActive]}>
             Debt
           </Text>
         </Pressable>
         <Pressable
           style={[s.tab, tab === 'goals' && s.tabActive]}
-          onPress={() => setTab('goals')}
+          onPress={() => goToTab('goals')}
         >
-          <Text
-            style={[s.tabText, tab === 'goals' && s.tabTextActive]}
-          >
+          <Text style={[s.tabText, tab === 'goals' && s.tabTextActive]}>
             Goals
           </Text>
         </Pressable>
       </View>
-      {tab === 'debt' ? <DebtList /> : <SavingsGoals />}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.x / width);
+          setTab(index === 0 ? 'debt' : 'goals');
+        }}
+        style={{ flex: 1 }}
+      >
+        <View style={{ width }}>
+          <DebtList />
+        </View>
+        <View style={{ width }}>
+          <SavingsGoals />
+        </View>
+      </ScrollView>
     </View>
   );
 }
