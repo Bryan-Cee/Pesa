@@ -61,10 +61,7 @@ export function Plan() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={(e) => scrollX.setValue(e.nativeEvent.contentOffset.x)}
         onMomentumScrollEnd={(e) => {
           const index = Math.round(e.nativeEvent.contentOffset.x / width);
           setTab(index === 0 ? 'debt' : 'goals');
