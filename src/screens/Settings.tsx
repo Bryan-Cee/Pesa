@@ -21,6 +21,7 @@ import { useReminderStore } from '../stores/reminderStore';
 import { TabIcon } from '../components/TabIcon';
 import { useColors } from '../hooks/useTheme';
 import { formatKes } from '../utils/formatters';
+import { exportData, ExportFormat } from '../utils/exportData';
 
 type ReviewCadence = Settings['reviewCadence'];
 
@@ -41,6 +42,7 @@ export function SettingsScreen() {
   const [showPayoffPicker, setShowPayoffPicker] = useState(false);
   const [showEmergencyPicker, setShowEmergencyPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   function saveIncome() {
     const val = parseInt(incomeText, 10);
@@ -73,6 +75,27 @@ export function SettingsScreen() {
         },
       ]
     );
+  }
+
+  function handleExport() {
+    Alert.alert('Export Data', 'Choose a format', [
+      { text: 'CSV', onPress: () => runExport('csv') },
+      { text: 'XLSX', onPress: () => runExport('xlsx') },
+      { text: 'JSON', onPress: () => runExport('json') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
+  async function runExport(format: ExportFormat) {
+    setExporting(true);
+    try {
+      await exportData(format);
+      updateSettings({ lastExportedAt: new Date().toISOString() });
+    } catch {
+      Alert.alert('Export Failed', 'Could not export data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
   }
 
   const cadenceLabels: Record<ReviewCadence, string> = {
@@ -258,12 +281,12 @@ export function SettingsScreen() {
       {/* Data & Appearance */}
       <Text style={s.sectionTitle}>DATA</Text>
       <View style={s.sectionCard}>
-        <Pressable style={s.row}>
+        <Pressable style={s.row} onPress={handleExport} disabled={exporting}>
           <View style={[s.rowIcon, { backgroundColor: colors.investBlueDim }]}>
             <TabIcon name="download" color={colors.investBlue} size={16} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.rowLabel}>Export Data</Text>
+            <Text style={s.rowLabel}>{exporting ? 'Exporting…' : 'Export Data'}</Text>
             <Text style={s.rowDesc}>
               {settings.lastExportedAt
                 ? `Last: ${settings.lastExportedAt.substring(0, 10)}`
