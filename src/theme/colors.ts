@@ -9,15 +9,15 @@ export const darkColors = {
   // Borders
   border: 'rgba(255,255,255,0.055)',
   borderMed: 'rgba(255,255,255,0.09)',
-  borderFocus: 'rgba(37,211,102,0.45)',
+  borderFocus: 'rgba(252,76,2,0.45)',
 
-  // Primary accent (WhatsApp Green)
-  coral: '#25D366',
-  coralLight: '#4ADE80',
-  coralDim: 'rgba(37,211,102,0.12)',
-  coralGlow: 'rgba(37,211,102,0.22)',
-  coralBorder: 'rgba(37,211,102,0.35)',
-  coralShadow: '0 8px 24px rgba(37,211,102,0.3)',
+  // Primary accent (Strava Orange)
+  coral: '#FC4C02',
+  coralLight: '#FF7340',
+  coralDim: 'rgba(252,76,2,0.12)',
+  coralGlow: 'rgba(252,76,2,0.22)',
+  coralBorder: 'rgba(252,76,2,0.35)',
+  coralShadow: '0 8px 24px rgba(252,76,2,0.3)',
   buttonText: '#FFFFFF',
 
   // Subtle overlays (for tracks, inactive chips, faint backgrounds)
@@ -28,7 +28,7 @@ export const darkColors = {
   debtRed: '#F97048',
   savingsGreen: '#34D399',
   investBlue: '#60A5FA',
-  householdCoral: '#25D366',
+  householdCoral: '#FC4C02',
   vehicleTeal: '#2DD4BF',
   subsPurple: '#A78BFA',
   entertAmber: '#FBBF24',
@@ -41,7 +41,7 @@ export const darkColors = {
   debtRedDim: 'rgba(249,112,72,0.10)',
   savingsGreenDim: 'rgba(52,211,153,0.10)',
   investBlueDim: 'rgba(96,165,250,0.10)',
-  householdCoralDim: 'rgba(37,211,102,0.10)',
+  householdCoralDim: 'rgba(252,76,2,0.10)',
   vehicleTealDim: 'rgba(45,212,191,0.10)',
   subsPurpleDim: 'rgba(167,139,250,0.10)',
   entertAmberDim: 'rgba(251,191,36,0.10)',
@@ -81,15 +81,15 @@ export const lightColors: typeof darkColors = {
   // Borders
   border: 'rgba(0,0,0,0.08)',
   borderMed: 'rgba(0,0,0,0.12)',
-  borderFocus: 'rgba(26,154,78,0.45)',
+  borderFocus: 'rgba(232,61,0,0.45)',
 
-  // Primary accent (WhatsApp Green — darkened for light bg)
-  coral: '#1A9A4E',
-  coralLight: '#25D366',
-  coralDim: 'rgba(26,154,78,0.10)',
-  coralGlow: 'rgba(26,154,78,0.15)',
-  coralBorder: 'rgba(26,154,78,0.3)',
-  coralShadow: '0 8px 24px rgba(26,154,78,0.2)',
+  // Primary accent (Strava Orange — darkened for light bg)
+  coral: '#E83D00',
+  coralLight: '#FC4C02',
+  coralDim: 'rgba(232,61,0,0.10)',
+  coralGlow: 'rgba(232,61,0,0.15)',
+  coralBorder: 'rgba(232,61,0,0.3)',
+  coralShadow: '0 8px 24px rgba(232,61,0,0.2)',
   buttonText: '#FFFFFF',
 
   // Subtle overlays (for tracks, inactive chips, faint backgrounds)
@@ -100,7 +100,7 @@ export const lightColors: typeof darkColors = {
   debtRed: '#E8613D',
   savingsGreen: '#1A9A6B',
   investBlue: '#3B82F6',
-  householdCoral: '#1A9A4E',
+  householdCoral: '#E83D00',
   vehicleTeal: '#0D9488',
   subsPurple: '#7C3AED',
   entertAmber: '#D97706',
@@ -113,7 +113,7 @@ export const lightColors: typeof darkColors = {
   debtRedDim: 'rgba(232,97,61,0.08)',
   savingsGreenDim: 'rgba(26,154,107,0.08)',
   investBlueDim: 'rgba(59,130,246,0.08)',
-  householdCoralDim: 'rgba(26,154,78,0.08)',
+  householdCoralDim: 'rgba(232,61,0,0.08)',
   vehicleTealDim: 'rgba(13,148,136,0.08)',
   subsPurpleDim: 'rgba(124,58,237,0.08)',
   entertAmberDim: 'rgba(217,119,6,0.08)',
