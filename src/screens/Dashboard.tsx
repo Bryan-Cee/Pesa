@@ -189,7 +189,7 @@ export function Dashboard() {
           <View style={s.headerIcons}>
             <Link href="/reminders" asChild>
               <Pressable style={s.iconBtn}>
-                <TabIcon name="bell" color={colors.t2} size={18} />
+                <TabIcon name="bell" color={colors.t2} size={22} />
                 {activeReminderCount > 0 && (
                   <View style={s.badge}>
                     <Text style={s.badgeText}>{activeReminderCount}</Text>
@@ -199,7 +199,7 @@ export function Dashboard() {
             </Link>
             <Link href="/settings" asChild>
               <Pressable style={s.iconBtn}>
-                <TabIcon name="settings" color={colors.t2} size={18} />
+                <TabIcon name="settings" color={colors.t2} size={22} />
               </Pressable>
             </Link>
           </View>

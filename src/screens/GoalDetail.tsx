@@ -7,6 +7,8 @@ import {
   Pressable,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '../hooks/useTheme';
@@ -150,8 +152,8 @@ export function GoalDetail() {
   }
 
   return (
-    <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Progress Section */}
         <Card style={s.progressCard}>
           <View style={s.headerRow}>
@@ -310,7 +312,7 @@ export function GoalDetail() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

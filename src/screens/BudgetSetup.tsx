@@ -7,6 +7,8 @@ import {
   TextInput,
   Pressable,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColors } from '../hooks/useTheme';
@@ -128,7 +130,7 @@ export function BudgetSetup() {
 
   if (step === 0) {
     return (
-      <View style={s.screen}>
+      <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={s.header}>
           <Text style={s.title}>
             Review {getMonthLabel(nextYear, nextMonth)} Budget
@@ -211,7 +213,7 @@ export function BudgetSetup() {
             <Text style={s.nextButtonText}>Review</Text>
           </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     );
   }
 

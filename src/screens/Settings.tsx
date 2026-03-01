@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Constants from 'expo-constants';
 import {
   View,
   Text,
@@ -8,6 +9,8 @@ import {
   Pressable,
   Switch,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -42,6 +45,8 @@ export function SettingsScreen() {
   const [showPayoffPicker, setShowPayoffPicker] = useState(false);
   const [showEmergencyPicker, setShowEmergencyPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showExportPicker, setShowExportPicker] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('csv');
   const [exporting, setExporting] = useState(false);
 
   function saveIncome() {
@@ -77,20 +82,12 @@ export function SettingsScreen() {
     );
   }
 
-  function handleExport() {
-    Alert.alert('Export Data', 'Choose a format', [
-      { text: 'CSV', onPress: () => runExport('csv') },
-      { text: 'XLSX', onPress: () => runExport('xlsx') },
-      { text: 'JSON', onPress: () => runExport('json') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }
-
-  async function runExport(format: ExportFormat) {
+  async function runExport() {
     setExporting(true);
     try {
-      await exportData(format);
+      await exportData(exportFormat);
       updateSettings({ lastExportedAt: new Date().toISOString() });
+      setShowExportPicker(false);
     } catch {
       Alert.alert('Export Failed', 'Could not export data. Please try again.');
     } finally {
@@ -129,7 +126,8 @@ export function SettingsScreen() {
   const s = styles(colors);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
       {/* Profile */}
       <View style={s.profileCard}>
         <View style={[s.profileAvatar, { backgroundColor: colors.coralDim }]}>
@@ -281,12 +279,12 @@ export function SettingsScreen() {
       {/* Data & Appearance */}
       <Text style={s.sectionTitle}>DATA</Text>
       <View style={s.sectionCard}>
-        <Pressable style={s.row} onPress={handleExport} disabled={exporting}>
+        <Pressable style={s.row} onPress={() => setShowExportPicker(!showExportPicker)}>
           <View style={[s.rowIcon, { backgroundColor: colors.investBlueDim }]}>
             <TabIcon name="download" color={colors.investBlue} size={16} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.rowLabel}>{exporting ? 'Exporting…' : 'Export Data'}</Text>
+            <Text style={s.rowLabel}>Export Data</Text>
             <Text style={s.rowDesc}>
               {settings.lastExportedAt
                 ? `Last: ${settings.lastExportedAt.substring(0, 10)}`
@@ -295,6 +293,28 @@ export function SettingsScreen() {
           </View>
           <TabIcon name="chevron-right" color={colors.t3} size={18} />
         </Pressable>
+        {showExportPicker && (
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={s.exportPicker}>
+            <View style={s.pickerRow}>
+              {(['csv', 'xlsx', 'json'] as ExportFormat[]).map((fmt) => (
+                <OptionPill
+                  key={fmt}
+                  label={fmt.toUpperCase()}
+                  active={exportFormat === fmt}
+                  onPress={() => setExportFormat(fmt)}
+                />
+              ))}
+            </View>
+            <Pressable
+              style={[s.exportBtn, { backgroundColor: colors.investBlue, opacity: exporting ? 0.6 : 1 }]}
+              onPress={runExport}
+              disabled={exporting}
+            >
+              <TabIcon name="download" color="#fff" size={14} />
+              <Text style={s.exportBtnText}>{exporting ? 'Exporting…' : `Export as ${exportFormat.toUpperCase()}`}</Text>
+            </Pressable>
+          </Animated.View>
+        )}
         <View style={s.divider} />
         <Pressable style={s.row} onPress={() => setShowThemePicker(!showThemePicker)}>
           <View style={[s.rowIcon, { backgroundColor: colors.coralDim }]}>
@@ -350,8 +370,16 @@ export function SettingsScreen() {
         </View>
       </View>
 
-      <View style={{ height: 100 }} />
+      {/* Version */}
+      <View style={s.versionBlock}>
+        <Text style={s.versionApp}>Pesa</Text>
+        <Text style={s.versionText}>Version {Constants.expoConfig?.version ?? '—'}</Text>
+        <Text style={s.versionText}>Build {Constants.easConfig?.projectId ? Constants.expoConfig?.version : '—'}</Text>
+      </View>
+
+      <View style={{ height: 40 }} />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -368,6 +396,7 @@ const styles = (c: ReturnType<typeof useColors>) =>
       borderColor: c.border,
       borderRadius: radii.lg,
       padding: 16,
+      marginTop: 20,
       marginBottom: 24,
       borderCurve: 'continuous',
     },
@@ -426,6 +455,18 @@ const styles = (c: ReturnType<typeof useColors>) =>
     rowDesc: { fontSize: 12, color: c.t3, marginTop: 2 },
 
     pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 14, paddingBottom: 14 },
+    exportPicker: { paddingBottom: 14 },
+    exportBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      marginHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: radii.button,
+      borderCurve: 'continuous',
+    },
+    exportBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
     pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radii.button, borderWidth: 1, borderCurve: 'continuous' },
     pillText: { fontSize: 13, fontWeight: '600' },
 
@@ -433,4 +474,8 @@ const styles = (c: ReturnType<typeof useColors>) =>
     resetInput: { borderWidth: 1, borderRadius: radii.xs, padding: 10, fontSize: 15, fontWeight: '700', marginBottom: 10, borderCurve: 'continuous' },
     resetBtn: { paddingVertical: 10, borderRadius: radii.button, alignItems: 'center', borderCurve: 'continuous' },
     resetBtnText: { color: c.buttonText, fontWeight: '700', fontSize: 15 },
+
+    versionBlock: { alignItems: 'center', paddingVertical: 24, gap: 4 },
+    versionApp: { fontSize: 13, fontWeight: '700', color: c.t2 },
+    versionText: { fontSize: 12, color: c.t3 },
   });

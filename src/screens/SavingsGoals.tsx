@@ -11,6 +11,7 @@ import {
 import { BlurView } from 'expo-blur';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors, useIsDark } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
@@ -34,6 +35,7 @@ export function SavingsGoals() {
 
   const colors = useColors();
   const isDark = useIsDark();
+  const insets = useSafeAreaInsets();
   const s = mkStyles(colors);
 
   const activeGoals = useMemo(
@@ -313,7 +315,7 @@ export function SavingsGoals() {
             <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
           </Pressable>
 
-          <View style={s.modalContent}>
+          <View style={[s.modalContent, { paddingBottom: spacing.lg + insets.bottom }]}>
             {/* Drag handle */}
             <View style={s.handleRow}>
               <View style={s.handle} />
@@ -327,6 +329,7 @@ export function SavingsGoals() {
               </Pressable>
             </View>
 
+            <ScrollView showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
             <View style={s.modalField}>
               <Text style={s.modalLabel}>Name</Text>
               <TextInput
@@ -453,6 +456,7 @@ export function SavingsGoals() {
                 <Text style={s.createBtnText}>Create Goal</Text>
               </Pressable>
             </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -643,7 +647,6 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
     borderBottomWidth: 0,
     borderColor: c.borderMed,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
     maxHeight: '88%',
   },
   handleRow: {
@@ -682,18 +685,23 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   },
   modalField: { marginBottom: 16 },
   modalLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
-    color: c.t2,
+    color: c.t3,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
     marginBottom: 6,
   },
   modalInput: {
     backgroundColor: c.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-    fontSize: 16,
+    borderWidth: 1,
+    borderColor: c.borderMed,
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+    fontSize: 15,
     color: c.t1,
-    paddingVertical: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   typePills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typePill: {
@@ -707,17 +715,20 @@ const mkStyles = (c: ThemeColors) => StyleSheet.create({
   typePillTextActive: { color: c.coral },
   datePickerBtn: {
     backgroundColor: c.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: c.borderMed,
+    borderRadius: radii.sm,
+    borderCurve: 'continuous',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   datePickerValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: c.t1,
   },
   datePickerPlaceholder: {
-    fontSize: 16,
+    fontSize: 15,
     color: c.t3,
   },
   modalActions: {

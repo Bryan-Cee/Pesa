@@ -12,6 +12,7 @@ import {
 import { BlurView } from 'expo-blur';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors, useIsDark } from '../hooks/useTheme';
 import { ThemeColors } from '../theme/colors';
 import { spacing, radii } from '../theme/spacing';
@@ -35,6 +36,7 @@ export function DebtList() {
 
   const colors = useColors();
   const isDark = useIsDark();
+  const insets = useSafeAreaInsets();
   const s = mkStyles(colors);
 
   const [showCreate, setShowCreate] = useState(false);
@@ -297,7 +299,7 @@ export function DebtList() {
             />
           </Pressable>
 
-          <View style={s.modalContent}>
+          <View style={[s.modalContent, { paddingBottom: spacing.lg + insets.bottom }]}>
             {/* Drag handle */}
             <View style={s.handleRow}>
               <View style={s.handle} />
@@ -314,7 +316,7 @@ export function DebtList() {
               </Pressable>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
               <View style={s.modalField}>
                 <Text style={s.modalLabel}>Name</Text>
                 <TextInput
@@ -640,7 +642,6 @@ const mkStyles = (c: ThemeColors) =>
       borderBottomWidth: 0,
       borderColor: c.borderMed,
       paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.lg,
       maxHeight: '88%',
     },
     handleRow: {
@@ -679,29 +680,37 @@ const mkStyles = (c: ThemeColors) =>
     },
     modalField: { marginBottom: 16 },
     modalLabel: {
-      fontSize: 13,
+      fontSize: 11,
       fontWeight: '600',
-      color: c.t2,
+      color: c.t3,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
       marginBottom: 6,
     },
     modalInput: {
       backgroundColor: c.bgCard,
-      borderBottomWidth: 1,
-      borderBottomColor: c.border,
-      fontSize: 16,
+      borderWidth: 1,
+      borderColor: c.borderMed,
+      borderRadius: radii.sm,
+      borderCurve: 'continuous',
+      fontSize: 15,
       color: c.t1,
-      paddingVertical: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
     },
 
     /* Date picker */
     datePickerBtn: {
       backgroundColor: c.bgCard,
-      borderBottomWidth: 1,
-      borderBottomColor: c.border,
-      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: c.borderMed,
+      borderRadius: radii.sm,
+      borderCurve: 'continuous',
+      paddingVertical: 12,
+      paddingHorizontal: 14,
     },
     datePickerValue: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '500',
       color: c.t1,
     },

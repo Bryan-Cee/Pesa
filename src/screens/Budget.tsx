@@ -462,7 +462,7 @@ export function Budget() {
                 <Text style={s.modalCloseBtnText}>Cancel</Text>
               </Pressable>
             </View>
-            <ScrollView style={s.modalContent} keyboardShouldPersistTaps="handled">
+            <ScrollView style={s.modalContent} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
               <View style={s.modalField}>
                 <Text style={s.modalLabel}>NAME</Text>
                 <TextInput

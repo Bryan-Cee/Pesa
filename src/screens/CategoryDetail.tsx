@@ -7,6 +7,8 @@ import {
   TextInput,
   Pressable,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -117,8 +119,8 @@ export function CategoryDetail() {
   }
 
   return (
-    <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Header Card */}
         <Card style={s.headerCard} glowBorder>
           <View style={s.titleRow}>
@@ -389,8 +391,7 @@ export function CategoryDetail() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

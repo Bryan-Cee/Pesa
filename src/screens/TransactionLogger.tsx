@@ -450,6 +450,7 @@ export function TransactionLogger() {
         style={s.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets
       >
         {/* ============ SMS Tab: unparsed ============ */}
         {tab === 'sms' && !parsed && (

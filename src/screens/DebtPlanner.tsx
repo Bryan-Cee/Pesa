@@ -7,6 +7,8 @@ import {
   Pressable,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -143,8 +145,8 @@ export function DebtPlanner() {
   const paidSoFar = debt.originalBalance - debt.currentBalance;
 
   return (
-    <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic">
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={s.header}>
           <Text style={s.headerTitle}>Debt Planner</Text>
@@ -492,7 +494,7 @@ export function DebtPlanner() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
